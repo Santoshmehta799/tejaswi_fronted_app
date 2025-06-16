@@ -120,7 +120,6 @@ function StickerGeneratorPage() {
             if (response.status === 200) {
                 setQrCodeData(response?.data)
                 const qrCode = await dispatch(showStickerGenerator(response?.data?.id)).unwrap();
-
                 setQrCodeScenner(qrCode)
                 setOpen(true);
             }

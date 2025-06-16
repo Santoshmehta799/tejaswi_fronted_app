@@ -90,7 +90,7 @@ const ProductBillModal = ({ open, setOpen, item, qr }) => {
 
                     <Stack direction="row" justifyContent="space-between" margin="15px 0">
                         <Box>
-                            <h3 style={{ fontSize: "18px", margin: "0px" }}>{item?.trading_name}</h3>
+                            <h3 style={{ fontSize: "18px", margin: "0px" }}>{item?.trading_name === "green" ? "GREEN" : "BHARAT"}</h3>
                             <p style={{ fontSize: "12px", margin: "0px" }}>MADE IN INDIA</p>
                             {item?.trading_name?.toLowerCase() !== "green" && (
                                 <>
@@ -120,10 +120,10 @@ const ProductBillModal = ({ open, setOpen, item, qr }) => {
                         <TableHead>
                             <TableRow>
                                 <TableCellComponent>
-                                    Roll No
+                                    Product Number
                                 </TableCellComponent>
                                 <TableCellComponent sx={{ borderRight: "1px solid #ccc" }}>
-                                    : {item?.serial_number}
+                                    : {item?.product_number}
                                 </TableCellComponent>
                                 <TableCellComponent>
                                     Colour
@@ -176,24 +176,23 @@ const ProductBillModal = ({ open, setOpen, item, qr }) => {
                             </TableRow>
                         </TableHead>
                     </Table>
-
-                    <Box sx={{ textAlign: "center", mt: 4 }}>
-                        <button
-                            onClick={handlePrint}
-                            style={{
-                                backgroundColor: "#151620",
-                                color: "#fff",
-                                padding: "10px 20px",
-                                fontSize: "14px",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            🖨️ Print
-                        </button>
-                    </Box>
                 </InnerContainer>
+                <Box sx={{ textAlign: "center", margin: "5px 0px 20px 0px" }}>
+                    <button
+                        onClick={handlePrint}
+                        style={{
+                            backgroundColor: "#151620",
+                            color: "#fff",
+                            padding: "10px 20px",
+                            fontSize: "14px",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                        }}
+                    >
+                        🖨️ Print
+                    </button>
+                </Box>
             </Container>
         </Modal>
     );

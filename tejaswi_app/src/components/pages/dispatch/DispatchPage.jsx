@@ -79,7 +79,6 @@ function DispatchPage() {
 
     const { data } = useSelector((state) => state.dispatch)
 
-
     const handleChange = (e) => {
         const { name, value } = e.target
         setUserData({
@@ -123,7 +122,7 @@ function DispatchPage() {
             vehicle_number: userData?.vehicleNumber,
             driver_contact: userData?.driverContactNumber,
             scanned_items: qrData.flatMap((data) => {
-                return [`[${data.product_number}] - ${data.quality} - ${data.colour} - ${data.product_type} - ${data.net_weight}kg`];
+                return [`[${data.product_number}] - ${data.quality} - ${data.colour} - ${data.product_type} - ${data.net_weight}kg - ${data.gross_weight}gw - ${data.length}l - ${data.width}w - ${data.gsm}gsm`];
             })
         }
 

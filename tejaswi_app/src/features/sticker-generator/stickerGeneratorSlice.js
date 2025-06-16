@@ -47,7 +47,7 @@ export const createStickerGenerator = createAsyncThunk(
 
 export const showStickerGenerator = createAsyncThunk(
     "stickerGenerator/showStickerGenerator",
-    async ({ id }, thunkAPI) => {
+    async (id, thunkAPI) => {
         try {
             const response = await axios.get(
                 `${process.env.REACT_APP_API_KEY}/auth/sticker-generator/${id}/qr-code/`,
