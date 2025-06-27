@@ -85,7 +85,7 @@ function InventoryPage() {
     return (
         <>
             <EditInventoryPage isId={isId} open={open} setOpen={setOpen} />
-            <InventoryBillPage isOpen={isOpen} setIsOpen={setIsOpen} items={items} />
+            <InventoryBillPage isOpen={isOpen} setIsOpen={setIsOpen} items={items}/>
             <Container>
                 <InnerContainer>
                     <BoxContainer elevation={2}>
@@ -119,9 +119,6 @@ function InventoryPage() {
                                         </TableCellComponent>
                                         <TableCellComponent sx={{ width: "10%" }} align="center">
                                             Net Weight
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "10%" }}>
-                                            Status
                                         </TableCellComponent>
                                         <TableCellComponent sx={{ width: "10%" }}>
                                             laminated
@@ -173,9 +170,6 @@ function InventoryPage() {
                                                         {data?.net_weight
                                                             ? data?.net_weight
                                                             : "-"}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer>
-                                                        {data?.is_sold === "true" ? "Sold" : "Unsold"}
                                                     </TableCellContainer>
                                                     <TableCellContainer align="center">
                                                         {data?.leminated === false ? "No" : "Yes"}

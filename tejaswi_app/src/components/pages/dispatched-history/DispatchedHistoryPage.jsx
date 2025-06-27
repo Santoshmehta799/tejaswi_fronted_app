@@ -116,7 +116,6 @@ function DispatchedHistoryPage() {
 
             let y = 25;
             doc.setFontSize(12);
-            doc.text(`Dispatch ID: ${dispatch.id || ''}`, 14, y);
             doc.text(`Client: ${dispatch.select_client || ''}`, 14, y += 6);
             doc.text(`Vehicle Number: ${dispatch.vehicle_number || ''}`, 14, y += 6);
             doc.text(`Driver Contact: ${dispatch.driver_contact || ''}`, 14, y += 6);
@@ -238,9 +237,6 @@ function DispatchedHistoryPage() {
                                         <TableRow>
                                             <TableCell sx={{ border: 'none', fontWeight: 600, paddingBottom: 0 }}>
                                                 <Box>
-                                                    <Typography sx={{ fontWeight: 600 }}>
-                                                        Dispatch ID: {dispatch?.id}
-                                                    </Typography>
                                                     <Typography>Client: {dispatch?.select_client}</Typography>
                                                     <Typography>Date: {formatDate(dispatch?.created_at)}</Typography>
                                                     <Typography>

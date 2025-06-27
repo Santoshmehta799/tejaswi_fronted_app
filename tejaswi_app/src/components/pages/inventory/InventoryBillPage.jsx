@@ -49,8 +49,8 @@ const Header = styled(Box)(({ theme }) => ({
 
 
 const TableCellComponent = styled(TableCell)(({ theme }) => ({
-    fontSize: "14px",
-    fontWeight: 500,
+    fontSize: "16px",
+    fontWeight: 600,
     padding: "12px 25px",
     whiteSpace: "nowrap",
 }));
@@ -67,6 +67,7 @@ function InventoryBillPage({ isOpen, setIsOpen, items }) {
         document.body.innerHTML = originalContents;
         window.location.reload();
     };
+
     return (
 
         <Modal open={isOpen}
@@ -92,10 +93,10 @@ function InventoryBillPage({ isOpen, setIsOpen, items }) {
                     <Stack direction="row" justifyContent="space-between" margin="15px 0">
                         <Box>
                             <h3 style={{ fontSize: "18px", margin: "0px" }}>{items?.trading_name === "green" ? "GREEN" : "BHARAT"}</h3>
-                            <p style={{ fontSize: "12px", margin: "0px" }}>MADE IN INDIA</p>
+                            <p style={{ fontSize: "14px", fontWeight: 600, margin: "0px" }}>MADE IN INDIA</p>
                             {items?.trading_name?.toLowerCase() !== "green" && (
                                 <>
-                                    <p style={{ fontSize: "12px", margin: "0px" }}>Manufactured by</p>
+                                    <p style={{ fontSize: "14px", fontWeight: 600, margin: "0px" }}>Manufactured by</p>
                                     <h3 style={{ fontSize: "16px", margin: "0px" }}>Tejaswi Nonwovens Pvt. Ltd</h3>
                                 </>
                             )}
@@ -121,10 +122,10 @@ function InventoryBillPage({ isOpen, setIsOpen, items }) {
                         <TableHead>
                             <TableRow>
                                 <TableCellComponent>
-                                    Roll No
+                                    Product No
                                 </TableCellComponent>
                                 <TableCellComponent sx={{ borderRight: "1px solid #ccc" }}>
-                                    : {items?.serial_number}
+                                    : {items?.product_number}
                                 </TableCellComponent>
                                 <TableCellComponent>
                                     Colour

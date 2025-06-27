@@ -8,13 +8,14 @@ import AdminConfigPage from "./components/pages/admin-config/AdminConfigPage";
 import InventoryPage from "./components/pages/inventory/InventoryPage";
 import DispatchPage from "./components/pages/dispatch/DispatchPage";
 import DispatchedHistoryPage from "./components/pages/dispatched-history/DispatchedHistoryPage";
+import Protected from "./components/Protected";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<LayoutPage />}>
+        <Route path="/" element={<Protected Component={LayoutPage} />}>
           <Route index element={<DashBoardPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/sticker-generator" element={<StickerGeneratorPage />} />

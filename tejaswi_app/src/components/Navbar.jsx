@@ -15,6 +15,8 @@ import { useState } from "react";
 import { styled } from "@mui/material/styles";
 import theme from "../utils/theme";
 import { MdOutlineEmail } from "react-icons/md";
+import { GiHamburgerMenu } from "react-icons/gi";
+import DrawerComponent from "./DrawerComponent";
 
 const Container = styled(Box)({
     width: "-webkit-fill-available",
@@ -88,6 +90,7 @@ const LogoutBtn = styled(Button)(({ theme }) => ({
 }));
 
 const UserCard = () => {
+    const role = Cookies.get("role");
     const navigate = useNavigate();
     const matches = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -106,7 +109,7 @@ const UserCard = () => {
             >
                 <UserDetailsContainer>
                     <Username>Tejaswi</Username>
-                    <Designation>Role: Onwer</Designation>
+                    <Designation>Role - {role}</Designation>
                     <Email>
                         <MdOutlineEmail sx={{ fontSize: "16px", mr: 0.5 }} />
                         Tejaswi@gmail.com
@@ -132,6 +135,8 @@ const UserCard = () => {
 function Navbar() {
     const [anchorElAccount, setAnchorElAccount] = useState(null);
     const openAccount = Boolean(anchorElAccount);
+    const [isOpen, setIsOpen] = useState(false);
+    const matches = useMediaQuery(theme.breakpoints.down("md"));
 
     const handleAccountClick = (event) => {
         setAnchorElAccount(event.currentTarget);
@@ -144,9 +149,22 @@ function Navbar() {
 
     return (
         <>
+            <DrawerComponent isOpen={isOpen} setIsOpen={setIsOpen} />
             <Container>
                 <InnerContainer>
-                    <Stack direction="row" spacing={2} >
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2} >
+
+
+                        {matches && (
+                            <IconButton
+                                sx={{ padding: "10px" }}
+                                onClick={() => setIsOpen(true)}
+                            >
+                                <GiHamburgerMenu style={{ color: "#000" }} />
+                            </IconButton>
+                        )}
+
+
                         <IconButton
                             sx={{ padding: "0px" }}
                             onClick={handleAccountClick}
