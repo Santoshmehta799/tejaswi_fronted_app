@@ -252,7 +252,7 @@ function DispatchedHistoryPage() {
                                                         sx={{ textTransform: "capitalize" }}
                                                         onClick={() => toggleRow(dispatch?.id)}
                                                     >
-                                                        {!expandedRows[dispatch?.id] ? "Hide Details" : "Show Details"}
+                                                        {expandedRows[dispatch?.id] ? "Hide Details" : "Show Details"}
                                                     </Button>
                                                     <Button
                                                         variant="contained"
@@ -266,7 +266,7 @@ function DispatchedHistoryPage() {
                                             </TableCell>
                                         </TableRow>
                                     </TableHead>
-                                    {!expandedRows[dispatch?.id] && (
+                                    {expandedRows[dispatch?.id] && (
                                         <TableBody sx={{
                                             borderBottom: "1px solid rgba(0, 0, 0, 0.2)"
                                         }}>

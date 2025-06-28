@@ -135,7 +135,8 @@ function AdminConfigPage() {
                 dispatch(getAdminConfig())
             }
             setColourData({
-                textColourData: "",
+                ...colourData,
+                textColourData: ""
             })
             setIsLoader(false);
         } catch (error) {
@@ -152,9 +153,11 @@ function AdminConfigPage() {
             if (response.status === 200) {
                 dispatch(getAdminConfig())
             }
+
             setUserData({
+                ...userData,
                 textData: "",
-            })
+            });
             setIsLoading(false);
         } catch (error) {
             console.error(error)
