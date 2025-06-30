@@ -59,6 +59,8 @@ const CameraContainer = styled(Box)(({ theme }) => ({
     border: "2px solid #1976d2",
     borderRadius: "10px",
     overflow: "hidden",
+    width: "100%",
+    maxWidth: "400px",
 }));
 
 const CameraOverlay = styled(Box)(({ theme }) => ({
@@ -103,6 +105,7 @@ function DispatchPage() {
     const canvasRef = useRef(null);
     const [cameraOpen, setCameraOpen] = useState(false);
     const [scanning, setScanning] = useState(false);
+    const [cameraError, setCameraError] = useState("");
     const streamRef = useRef(null);
     const scanIntervalRef = useRef(null);
 
@@ -136,14 +139,25 @@ function DispatchPage() {
     };
 
     const handleOpenCamera = async () => {
+        setCameraError(""); // Clear any previous errors
+        
         try {
+            // Check if getUserMedia is available
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error("Camera API not supported in this browser");
+            }
+
+            console.log("Requesting camera access...");
+            
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    facingMode: "environment",
+                    facingMode: "environment", // Try back camera first
                     width: { ideal: 1280 },
                     height: { ideal: 720 }
                 }
             });
+
+            console.log("Camera access granted");
 
             if (videoRef.current) {
                 videoRef.current.srcObject = stream;
@@ -153,41 +167,101 @@ function DispatchPage() {
 
                 // Wait for video to load before starting scan
                 videoRef.current.onloadedmetadata = () => {
-                    startQrScanning();
+                    console.log("Video loaded, starting QR scanning");
+                    videoRef.current.play().then(() => {
+                        startQrScanning();
+                    }).catch(err => console.error("Error playing video:", err));
+                };
+
+                // Also handle when video starts playing
+                videoRef.current.oncanplay = () => {
+                    console.log("Video can play");
+                    if (!scanIntervalRef.current) {
+                        startQrScanning();
+                    }
                 };
             }
         } catch (err) {
             console.error("Camera access error:", err);
-            alert("Unable to access camera. Please check permissions.");
+            setCameraError(err.message);
+            
+            // Try with different constraints if environment camera fails
+            if (err.name === 'OverconstrainedError' || err.message.includes('environment')) {
+                try {
+                    console.log("Trying with front camera...");
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: "user", // Front camera
+                            width: { ideal: 640 },
+                            height: { ideal: 480 }
+                        }
+                    });
+
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                        streamRef.current = stream;
+                        setCameraOpen(true);
+                        setScanning(true);
+                        setCameraError("");
+
+                        videoRef.current.onloadedmetadata = () => {
+                            videoRef.current.play().then(() => {
+                                startQrScanning();
+                            });
+                        };
+                    }
+                } catch (secondErr) {
+                    console.error("Second camera attempt failed:", secondErr);
+                    setCameraError("Unable to access camera. Please check permissions and try again.");
+                }
+            } else {
+                setCameraError("Unable to access camera. Please check permissions and try again.");
+            }
         }
     };
 
     const startQrScanning = () => {
-        if (!canvasRef.current || !videoRef.current) return;
+        console.log("Starting QR scanning...");
+        
+        if (!canvasRef.current || !videoRef.current) {
+            console.error("Canvas or video ref not available");
+            return;
+        }
 
         const canvas = canvasRef.current;
         const video = videoRef.current;
         const context = canvas.getContext('2d');
 
+        // Clear any existing interval
+        if (scanIntervalRef.current) {
+            clearInterval(scanIntervalRef.current);
+        }
+
         scanIntervalRef.current = setInterval(() => {
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                try {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-                if (code) {
-                    console.log("QR Code detected:", code.data);
-                    processQrCode(code.data);
-                    handleCloseCamera(); // Close camera after successful scan
+                    if (code) {
+                        console.log("QR Code detected:", code.data);
+                        processQrCode(code.data);
+                        handleCloseCamera(); // Close camera after successful scan
+                    }
+                } catch (error) {
+                    console.error("Error during QR scanning:", error);
                 }
             }
-        }, 100); // Scan every 100ms
+        }, 300); // Increased interval to 300ms for better performance
     };
 
     const handleCloseCamera = () => {
+        console.log("Closing camera...");
+        
         // Stop scanning
         if (scanIntervalRef.current) {
             clearInterval(scanIntervalRef.current);
@@ -196,13 +270,17 @@ function DispatchPage() {
 
         // Stop camera stream
         if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current.getTracks().forEach(track => {
+                track.stop();
+                console.log("Camera track stopped");
+            });
             streamRef.current = null;
         }
 
         // Reset states
         setCameraOpen(false);
         setScanning(false);
+        setCameraError("");
 
         if (videoRef.current) {
             videoRef.current.srcObject = null;
@@ -306,12 +384,26 @@ function DispatchPage() {
                                 )}
                             </Box>
 
+                            {cameraError && (
+                                <Box sx={{ 
+                                    mt: 2, 
+                                    p: 2, 
+                                    bgcolor: '#ffebee', 
+                                    color: '#c62828', 
+                                    borderRadius: 1,
+                                    fontSize: '14px'
+                                }}>
+                                    {cameraError}
+                                </Box>
+                            )}
+
                             {cameraOpen && (
                                 <CameraContainer>
                                     <video
                                         ref={videoRef}
                                         autoPlay
                                         playsInline
+                                        muted
                                         width="100%"
                                         style={{ display: "block" }}
                                     />
