@@ -92,6 +92,7 @@ function DispatchPage() {
     const runFunction = useRef(false);
     const [qrData, setQrData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [qrInputValue, setQrInputValue] = useState("")
     const [userData, setUserData] = useState({
         client: "",
         vehicleNumber: "",
@@ -115,25 +116,43 @@ function DispatchPage() {
 
     const handleQrInputChange = async (e) => {
         const product_Id = e.target.value;
+        setQrInputValue(product_Id);
         await processQrCode(product_Id);
     };
 
-    const processQrCode = async (product_Id) => {
-        if (!product_Id) return;
-        try {
-            const result = await dispatch(getDispatchQrData(product_Id)).unwrap();
-            if (result?.status === 200) {
-                setQrData(result?.data);
-                dispatch(getDispatchData());
-            }
-        } catch (error) {
-            console.error("QR API failed:", error);
-        }
-    };
 
     const handleOpenCamera = () => {
         setCameraOpen(true);
     };
+
+    // const processQrCode = async (product_Id) => {
+    //     if (!product_Id) return;
+    //     try {
+    //         const result = await dispatch(getDispatchQrData(product_Id)).unwrap();
+    //         if (result?.status === 200) {
+    //             console.log("Dispatch QR Data Response:", result.data);
+    //             setQrData(result?.data);
+    //             dispatch(getDispatchData());
+    //         }
+    //     } catch (error) {
+    //         console.error("QR API failed:", error);
+    //     }
+    // };
+
+    const processQrCode = async (product_Id) => {
+        if (!product_Id) return;
+        try {
+            const parsedData = JSON.parse(product_Id);
+            console.log("QR Code Parsed:", parsedData);
+            setQrData((prev) => [...prev, parsedData]);
+            setQrInputValue(parsedData.product_number); // update input with product_number
+        } catch (error) {
+            console.error("Invalid QR Code JSON:", error);
+        }
+    };
+
+
+
 
     const handleCloseCamera = () => {
         if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
@@ -252,11 +271,13 @@ function DispatchPage() {
                         <Grid item xs={12} md={6} lg={4}>
                             <InputLabelComponent>Scan or Enter QR Code*</InputLabelComponent>
                             <InputComponent
+                                value={qrInputValue}
                                 onChange={handleQrInputChange}
                                 required
                                 placeholder="Enter QR Code"
                                 fullWidth
                             />
+
                         </Grid>
 
                         <Grid item xs={12} md={6} lg={4}>

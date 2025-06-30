@@ -48,7 +48,7 @@ const InnerContainer = styled(Box)(({ theme }) => ({
 }));
 
 const TableCellComponent = styled(TableCell)(({ theme }) => ({
-    fontSize: "16px",
+    fontSize: "18px",
     fontWeight: 600,
     padding: "12px 25px",
     whiteSpace: "nowrap",
