@@ -1,47 +1,58 @@
-import { Box, Button, Grid, IconButton, InputLabel, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+/* eslint-disable react-hooks/exhaustive-deps */
+import {
+    Box, Button, Grid, IconButton, InputLabel, Paper, Stack,
+    Table, TableBody, TableCell, TableHead, TableRow,
+    TextField, Typography, Modal
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useEffect, useRef, useState } from "react";
 import { FaCamera } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
-import { createDispatchData, deleteDispatchData, getDispatchData, getDispatchQrData } from "../../../features/dispatch/dispatchSlice";
+import {
+    createDispatchData,
+    deleteDispatchData,
+    getDispatchData,
+    getDispatchQrData
+} from "../../../features/dispatch/dispatchSlice";
 import { MdOutlineDeleteOutline } from "react-icons/md";
 import { FaRegSquareCheck } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import jsQR from "jsqr";
 
-const Container = styled(Box)(({ theme }) => ({
+// Styled Components
+const Container = styled(Box)({
     width: "100%",
     height: "max-content",
     background: "#06060",
     padding: "30px 0px",
-}));
+});
 
-const InnerContainer = styled(Box)(({ theme }) => ({
+const InnerContainer = styled(Box)({
     width: "90%",
     margin: "auto",
-}));
+});
 
-const BoxContainer = styled(Paper)(({ theme }) => ({
+const BoxContainer = styled(Paper)({
     padding: "20px"
-}));
+});
 
-const Header = styled(Box)(({ theme }) => ({
+const Header = styled(Box)({
     marginBottom: "30px"
-}));
+});
 
-const Title = styled(Typography)(({ theme }) => ({
+const Title = styled(Typography)({
     fontSize: "20px",
     fontWeight: 600,
-}));
+});
 
-const InputLabelComponent = styled(InputLabel)(({ theme }) => ({
+const InputLabelComponent = styled(InputLabel)({
     fontSize: "14px",
     fontWeight: 550,
     color: "#000",
     marginBottom: "8px",
-}));
+});
 
-const InputComponent = styled(TextField)(({ theme }) => ({
+const InputComponent = styled(TextField)({
     fontSize: "14px",
     "& .MuiOutlinedInput-input": {
         padding: "10px",
@@ -51,49 +62,35 @@ const InputComponent = styled(TextField)(({ theme }) => ({
         fontSize: "14px",
         color: "#000",
     },
-}));
+});
 
-const CameraContainer = styled(Box)(({ theme }) => ({
+const CameraContainer = styled(Box)({
     position: "relative",
     marginTop: "16px",
     border: "2px solid #1976d2",
     borderRadius: "10px",
     overflow: "hidden",
     width: "100%",
-    maxWidth: "400px",
-}));
+});
 
-const CameraOverlay = styled(Box)(({ theme }) => ({
+const CameraOverlay = styled(Box)({
     position: "absolute",
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    width: "200px",
-    height: "200px",
+    width: "100%",
+    height: "100%",
     border: "2px solid #ff0000",
     borderRadius: "10px",
     zIndex: 1,
-    "&::before": {
-        content: '""',
-        position: "absolute",
-        top: "-2px",
-        left: "-2px",
-        right: "-2px",
-        bottom: "-2px",
-        background: "linear-gradient(45deg, transparent 40%, rgba(255, 0, 0, 0.2) 50%, transparent 60%)",
-        animation: "scan 2s linear infinite",
-    },
-    "@keyframes scan": {
-        "0%": { transform: "translateY(-100%)" },
-        "100%": { transform: "translateY(100%)" },
-    },
-}));
+});
 
+// Component
 function DispatchPage() {
-    const dispatch = useDispatch()
-    const navigate = useNavigate()
-    const runFunction = useRef(false)
-    const [qrData, setQrData] = useState([])
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const runFunction = useRef(false);
+    const [qrData, setQrData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [userData, setUserData] = useState({
         client: "",
@@ -109,15 +106,12 @@ function DispatchPage() {
     const streamRef = useRef(null);
     const scanIntervalRef = useRef(null);
 
-    const { data } = useSelector((state) => state.dispatch)
+    const { data } = useSelector((state) => state.dispatch);
 
     const handleChange = (e) => {
-        const { name, value } = e.target
-        setUserData({
-            ...userData,
-            [name]: value
-        })
-    }
+        const { name, value } = e.target;
+        setUserData({ ...userData, [name]: value });
+    };
 
     const handleQrInputChange = async (e) => {
         const product_Id = e.target.value;
@@ -126,11 +120,10 @@ function DispatchPage() {
 
     const processQrCode = async (product_Id) => {
         if (!product_Id) return;
-
         try {
             const result = await dispatch(getDispatchQrData(product_Id)).unwrap();
             if (result?.status === 200) {
-                setQrData(result?.data)
+                setQrData(result?.data);
                 dispatch(getDispatchData());
             }
         } catch (error) {
@@ -138,196 +131,103 @@ function DispatchPage() {
         }
     };
 
-    const handleOpenCamera = async () => {
-        setCameraError(""); // Clear any previous errors
-        
-        try {
-            // Check if getUserMedia is available
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error("Camera API not supported in this browser");
-            }
+    const handleOpenCamera = () => {
+        setCameraOpen(true);
+    };
 
-            console.log("Requesting camera access...");
-            
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: "environment", // Try back camera first
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                }
-            });
-
-            console.log("Camera access granted");
-
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                streamRef.current = stream;
-                setCameraOpen(true);
-                setScanning(true);
-
-                // Wait for video to load before starting scan
-                videoRef.current.onloadedmetadata = () => {
-                    console.log("Video loaded, starting QR scanning");
-                    videoRef.current.play().then(() => {
-                        startQrScanning();
-                    }).catch(err => console.error("Error playing video:", err));
-                };
-
-                // Also handle when video starts playing
-                videoRef.current.oncanplay = () => {
-                    console.log("Video can play");
-                    if (!scanIntervalRef.current) {
-                        startQrScanning();
-                    }
-                };
-            }
-        } catch (err) {
-            console.error("Camera access error:", err);
-            setCameraError(err.message);
-            
-            // Try with different constraints if environment camera fails
-            if (err.name === 'OverconstrainedError' || err.message.includes('environment')) {
-                try {
-                    console.log("Trying with front camera...");
-                    const stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: "user", // Front camera
-                            width: { ideal: 640 },
-                            height: { ideal: 480 }
-                        }
-                    });
-
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        streamRef.current = stream;
-                        setCameraOpen(true);
-                        setScanning(true);
-                        setCameraError("");
-
-                        videoRef.current.onloadedmetadata = () => {
-                            videoRef.current.play().then(() => {
-                                startQrScanning();
-                            });
-                        };
-                    }
-                } catch (secondErr) {
-                    console.error("Second camera attempt failed:", secondErr);
-                    setCameraError("Unable to access camera. Please check permissions and try again.");
-                }
-            } else {
-                setCameraError("Unable to access camera. Please check permissions and try again.");
-            }
+    const handleCloseCamera = () => {
+        if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
         }
+        setCameraOpen(false);
+        setScanning(false);
+        setCameraError("");
+        if (videoRef.current) videoRef.current.srcObject = null;
     };
 
     const startQrScanning = () => {
-        console.log("Starting QR scanning...");
-        
-        if (!canvasRef.current || !videoRef.current) {
-            console.error("Canvas or video ref not available");
-            return;
-        }
-
+        if (!canvasRef.current || !videoRef.current) return;
         const canvas = canvasRef.current;
         const video = videoRef.current;
         const context = canvas.getContext('2d');
 
-        // Clear any existing interval
-        if (scanIntervalRef.current) {
-            clearInterval(scanIntervalRef.current);
-        }
+        if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
 
         scanIntervalRef.current = setInterval(() => {
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                try {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                    const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-                    if (code) {
-                        console.log("QR Code detected:", code.data);
-                        processQrCode(code.data);
-                        handleCloseCamera(); // Close camera after successful scan
-                    }
-                } catch (error) {
-                    console.error("Error during QR scanning:", error);
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                if (code) {
+                    console.log("QR Code detected:", code.data);
+                    processQrCode(code.data);
+                    handleCloseCamera();
                 }
             }
-        }, 300); // Increased interval to 300ms for better performance
+        }, 300);
     };
 
-    const handleCloseCamera = () => {
-        console.log("Closing camera...");
-        
-        // Stop scanning
-        if (scanIntervalRef.current) {
-            clearInterval(scanIntervalRef.current);
-            scanIntervalRef.current = null;
-        }
+    useEffect(() => {
+        if (!cameraOpen) return;
 
-        // Stop camera stream
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach(track => {
-                track.stop();
-                console.log("Camera track stopped");
-            });
-            streamRef.current = null;
-        }
+        const openCamera = async () => {
+            setCameraError("");
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream;
+                    streamRef.current = stream;
+                    setScanning(true);
+                    videoRef.current.onloadedmetadata = () => videoRef.current.play().then(startQrScanning);
+                    videoRef.current.oncanplay = () => {
+                        if (!scanIntervalRef.current) startQrScanning();
+                    };
+                }
+            } catch (err) {
+                console.error("Camera access error:", err);
+                setCameraError("Unable to access camera. Please check permissions and try again.");
+            }
+        };
 
-        // Reset states
-        setCameraOpen(false);
-        setScanning(false);
-        setCameraError("");
+        openCamera();
 
-        if (videoRef.current) {
-            videoRef.current.srcObject = null;
-        }
-    };
+        return () => handleCloseCamera();
+    }, [cameraOpen]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-
         const data = {
-            select_client: userData?.client,
-            vehicle_number: userData?.vehicleNumber,
-            driver_contact: userData?.driverContactNumber,
-            scanned_items: qrData.flatMap((data) => {
-                return [`[${data.product_number}] - ${data.quality} - ${data.colour} - ${data.product_type} - ${data.net_weight}kg - ${data.gross_weight}gw - ${data.length}l - ${data.width}w - ${data.gsm}gsm`];
-            })
-        }
-
+            select_client: userData.client,
+            vehicle_number: userData.vehicleNumber,
+            driver_contact: userData.driverContactNumber,
+            scanned_items: qrData.map((d) =>
+                `[${d.product_number}] - ${d.quality} - ${d.colour} - ${d.product_type} - ${d.net_weight}kg - ${d.gross_weight}gw - ${d.length}l - ${d.width}w - ${d.gsm}gsm`
+            ),
+        };
         try {
             const response = await dispatch(createDispatchData(data)).unwrap();
             if (response.status === 200) {
-                setUserData({
-                    client: "",
-                    vehicleNumber: "",
-                    driverContactNumber: ""
-                });
+                setUserData({ client: "", vehicleNumber: "", driverContactNumber: "" });
+                navigate("/dispatched-history");
             }
-            navigate("/dispatched-history")
-            setIsLoading(false);
-        } catch (error) {
+        } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
         if (!runFunction.current) {
-            dispatch(getDispatchData())
-            runFunction.current = true
+            dispatch(getDispatchData());
+            runFunction.current = true;
         }
-    }, [dispatch])
-
-    useEffect(() => {
-        return () => {
-            handleCloseCamera();
-        };
-    }, []);
+    }, [dispatch]);
 
     return (
         <Container>
@@ -337,132 +237,70 @@ function DispatchPage() {
                         <Title>Dispatch Manager</Title>
                     </Header>
                     <Grid container spacing={3}>
-                        <Grid item size={{ xs: 12, md: 6, lg: 4 }}>
+                        <Grid item xs={12} md={6} lg={4}>
                             <InputLabelComponent>Client Name*</InputLabelComponent>
                             <InputComponent
-                                type="text"
-                                placeholder="Enter Client Name"
-                                fullWidth
-                                required
                                 name="client"
                                 value={userData.client}
                                 onChange={handleChange}
-                            />
-                        </Grid>
-
-                        <Grid item size={{ xs: 12, md: 6, lg: 4 }}>
-                            <InputLabelComponent>Scan or Enter QR Code*</InputLabelComponent>
-                            <InputComponent
-                                type="text"
-                                placeholder="Enter Scan or Enter QR Code..."
-                                fullWidth
                                 required
-                                onChange={handleQrInputChange}
+                                placeholder="Enter Client Name"
+                                fullWidth
                             />
                         </Grid>
 
                         <Grid item xs={12} md={6} lg={4}>
-                            <Box sx={{ display: "flex", alignItems: "end", height: "100%" }}>
-                                {!cameraOpen ? (
-                                    <Button
-                                        sx={{ textTransform: "capitalize", padding: "8px 25px" }}
-                                        variant="contained"
-                                        onClick={handleOpenCamera}
-                                    >
-                                        <FaCamera style={{ marginRight: "10px" }} />
-                                        Scan with Camera
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        sx={{ textTransform: "capitalize", padding: "8px 25px" }}
-                                        variant="outlined"
-                                        color="error"
-                                        onClick={handleCloseCamera}
-                                    >
-                                        Close Camera
-                                    </Button>
-                                )}
-                            </Box>
-
-                            {cameraError && (
-                                <Box sx={{ 
-                                    mt: 2, 
-                                    p: 2, 
-                                    bgcolor: '#ffebee', 
-                                    color: '#c62828', 
-                                    borderRadius: 1,
-                                    fontSize: '14px'
-                                }}>
-                                    {cameraError}
-                                </Box>
-                            )}
-
-                            {cameraOpen && (
-                                <CameraContainer>
-                                    <video
-                                        ref={videoRef}
-                                        autoPlay
-                                        playsInline
-                                        muted
-                                        width="100%"
-                                        style={{ display: "block" }}
-                                    />
-                                    <CameraOverlay />
-                                    <canvas
-                                        ref={canvasRef}
-                                        style={{ display: "none" }}
-                                    />
-                                    {scanning && (
-                                        <Box
-                                            sx={{
-                                                position: "absolute",
-                                                bottom: "10px",
-                                                left: "50%",
-                                                transform: "translateX(-50%)",
-                                                background: "rgba(0,0,0,0.7)",
-                                                color: "white",
-                                                padding: "5px 10px",
-                                                borderRadius: "5px",
-                                                fontSize: "12px"
-                                            }}
-                                        >
-                                            Scanning for QR codes...
-                                        </Box>
-                                    )}
-                                </CameraContainer>
-                            )}
-                        </Grid>
-
-                        <Grid item size={{ xs: 12, md: 6, lg: 4 }}>
-                            <InputLabelComponent>Vehicle Number*</InputLabelComponent>
+                            <InputLabelComponent>Scan or Enter QR Code*</InputLabelComponent>
                             <InputComponent
-                                type="text"
-                                placeholder="Enter Vehicle Number"
-                                fullWidth
+                                onChange={handleQrInputChange}
                                 required
-                                name="vehicleNumber"
-                                value={userData.vehicleNumber}
-                                onChange={handleChange}
+                                placeholder="Enter QR Code"
+                                fullWidth
                             />
                         </Grid>
 
-                        <Grid item size={{ xs: 12, md: 6, lg: 4 }}>
+                        <Grid item xs={12} md={6} lg={4}>
+                            <Box display="flex" alignItems="end" height="100%">
+                                <Button
+                                    sx={{ textTransform: "capitalize", px: 3 }}
+                                    variant={!cameraOpen ? "contained" : "outlined"}
+                                    color={!cameraOpen ? "primary" : "error"}
+                                    onClick={!cameraOpen ? handleOpenCamera : handleCloseCamera}
+                                >
+                                    <FaCamera style={{ marginRight: "10px" }} />
+                                    {!cameraOpen ? "Scan with Camera" : "Close Camera"}
+                                </Button>
+                            </Box>
+                        </Grid>
+
+                        <Grid item xs={12} md={6} lg={4}>
+                            <InputLabelComponent>Vehicle Number*</InputLabelComponent>
+                            <InputComponent
+                                name="vehicleNumber"
+                                value={userData.vehicleNumber}
+                                onChange={handleChange}
+                                required
+                                placeholder="Enter Vehicle Number"
+                                fullWidth
+                            />
+                        </Grid>
+
+                        <Grid item xs={12} md={6} lg={4}>
                             <InputLabelComponent>Driver Contact Number*</InputLabelComponent>
                             <InputComponent
-                                type="text"
-                                placeholder="Enter Driver Contact Number"
-                                fullWidth
-                                required
                                 name="driverContactNumber"
                                 value={userData.driverContactNumber}
                                 onChange={handleChange}
+                                required
+                                placeholder="Enter Driver Contact Number"
+                                fullWidth
                             />
                         </Grid>
 
                         <Table>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell colSpan={7} sx={{ fontSize: "16px", fontWeight: 600, padding: "10px 0" }}>
+                                    <TableCell colSpan={7} sx={{ fontSize: 16, fontWeight: 600 }}>
                                         Scanned Items
                                     </TableCell>
                                 </TableRow>
@@ -475,9 +313,12 @@ function DispatchPage() {
                                         <TableCell>{value?.colour}</TableCell>
                                         <TableCell>{value?.product_type}</TableCell>
                                         <TableCell>{value?.net_weight}</TableCell>
-                                        <TableCell sx={{ width: "80px" }}>
-                                            <IconButton color="error" onClick={() => dispatch(deleteDispatchData(value?.product_number))}>
-                                                <MdOutlineDeleteOutline style={{ fontSize: "20px" }} />
+                                        <TableCell>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => dispatch(deleteDispatchData(value?.product_number))}
+                                            >
+                                                <MdOutlineDeleteOutline fontSize="20px" />
                                             </IconButton>
                                         </TableCell>
                                     </TableRow>
@@ -485,14 +326,10 @@ function DispatchPage() {
                             </TableBody>
                         </Table>
 
-                        <Table sx={{
-                            border: "1px solid rgba(0, 0, 0, 0.2)",
-                            width: "100%",
-                            background: "#F9FAFB",
-                        }}>
+                        <Table sx={{ mt: 2, background: "#F9FAFB" }}>
                             <TableHead>
                                 <TableRow>
-                                    <TableCell colSpan={7} sx={{ fontSize: "16px", fontWeight: 600, borderBottom: "0px", padding: "8px 16px" }}>
+                                    <TableCell colSpan={7} sx={{ fontSize: 16, fontWeight: 600 }}>
                                         Dispatch Summary
                                     </TableCell>
                                 </TableRow>
@@ -500,13 +337,13 @@ function DispatchPage() {
                             <TableBody>
                                 {data?.map((value, index) => (
                                     <TableRow key={index}>
-                                        <TableCell sx={{ fontSize: "13px", borderBottom: "0px", padding: "3px 16px" }}>
+                                        <TableCell sx={{ fontSize: 13 }}>
                                             {value?.product_type} - {value?.quality} - ({value?.colour}) - {value?.net_weight}
                                         </TableCell>
                                     </TableRow>
                                 ))}
                                 <TableRow>
-                                    <TableCell sx={{ fontSize: "13px", fontWeight: 600, padding: "3px 16px" }}>
+                                    <TableCell sx={{ fontWeight: 600 }}>
                                         Total Items: {data?.length || 0} | Total Weight:{" "}
                                         {data?.reduce((acc, curr) => acc + parseFloat(curr?.net_weight || 0), 0).toFixed(2)}
                                     </TableCell>
@@ -514,16 +351,16 @@ function DispatchPage() {
                             </TableBody>
                         </Table>
 
-                        <Grid item size={{ xs: 12 }}>
+                        <Grid item xs={12}>
                             <Stack direction="row" gap={3}>
                                 <Button
+                                    type="submit"
                                     variant="contained"
                                     color="primary"
-                                    sx={{ textTransform: "capitalize", background: "#FF0000" }}
-                                    type="submit"
                                     disabled={isLoading}
+                                    sx={{ background: "#FF0000", textTransform: "capitalize" }}
                                 >
-                                    <FaRegSquareCheck style={{ marginRight: "10px" }} />
+                                    <FaRegSquareCheck style={{ marginRight: 10 }} />
                                     Finalize Dispatch
                                 </Button>
                             </Stack>
@@ -531,8 +368,70 @@ function DispatchPage() {
                     </Grid>
                 </BoxContainer>
             </InnerContainer>
+
+            {/* Modal for Camera View */}
+            <Modal open={cameraOpen} onClose={handleCloseCamera}>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: "90%",
+                        maxWidth: 600,
+                        bgcolor: "background.paper",
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: 2,
+                        outline: "none",
+                    }}
+                >
+                    <CameraContainer>
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            width="100%"
+                            style={{ display: "block" }}
+                        />
+                        <CameraOverlay />
+                        <canvas ref={canvasRef} style={{ display: "none" }} />
+                        {scanning && (
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    bottom: 10,
+                                    left: "50%",
+                                    transform: "translateX(-50%)",
+                                    background: "rgba(0,0,0,0.7)",
+                                    color: "white",
+                                    px: 2,
+                                    py: 1,
+                                    borderRadius: 1,
+                                    fontSize: 12,
+                                }}
+                            >
+                                Scanning for QR code...
+                            </Box>
+                        )}
+                    </CameraContainer>
+
+                    {cameraError && (
+                        <Box sx={{ mt: 2, color: "error.main", fontSize: "14px" }}>
+                            {cameraError}
+                        </Box>
+                    )}
+
+                    <Box mt={2} display="flex" justifyContent="flex-end">
+                        <Button variant="outlined" color="error" onClick={handleCloseCamera}>
+                            Close Camera
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
         </Container>
-    )
+    );
 }
 
-export default DispatchPage
+export default DispatchPage;
