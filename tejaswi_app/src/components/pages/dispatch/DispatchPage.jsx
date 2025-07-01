@@ -114,45 +114,36 @@ function DispatchPage() {
         setUserData({ ...userData, [name]: value });
     };
 
-    const handleQrInputChange = async (e) => {
-        const product_Id = e.target.value;
-        setQrInputValue(product_Id);
-        await processQrCode(product_Id);
+    const fetchQrData = async (product_Id) => {
+        try {
+            const result = await dispatch(getDispatchQrData(product_Id)).unwrap();
+            if (result?.status === 200) {
+                setQrData((prev) => [...prev, ...result?.data]);
+                dispatch(getDispatchData());
+            }
+        } catch (error) {
+            console.error("QR API failed:", error);
+        }
     };
 
+    const handleQrInputChange = (e) => {
+        setQrInputValue(e.target.value);
+    };
 
     const handleOpenCamera = () => {
         setCameraOpen(true);
     };
 
-    // const processQrCode = async (product_Id) => {
-    //     if (!product_Id) return;
-    //     try {
-    //         const result = await dispatch(getDispatchQrData(product_Id)).unwrap();
-    //         if (result?.status === 200) {
-    //             console.log("Dispatch QR Data Response:", result.data);
-    //             setQrData(result?.data);
-    //             dispatch(getDispatchData());
-    //         }
-    //     } catch (error) {
-    //         console.error("QR API failed:", error);
-    //     }
-    // };
 
-    const processQrCode = async (product_Id) => {
+    const processQrCode = (product_Id) => {
         if (!product_Id) return;
         try {
             const parsedData = JSON.parse(product_Id);
-            console.log("QR Code Parsed:", parsedData);
-            setQrData((prev) => [...prev, parsedData]);
-            setQrInputValue(parsedData.product_number); // update input with product_number
+            setQrInputValue(parsedData.product_number);
         } catch (error) {
             console.error("Invalid QR Code JSON:", error);
         }
     };
-
-
-
 
     const handleCloseCamera = () => {
         if (scanIntervalRef.current) clearInterval(scanIntervalRef.current);
@@ -189,6 +180,17 @@ function DispatchPage() {
             }
         }, 300);
     };
+
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            if (qrInputValue.trim()) {
+                fetchQrData(qrInputValue);
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounce);
+    }, [qrInputValue]);
+
 
     useEffect(() => {
         if (!cameraOpen) return;
@@ -271,7 +273,7 @@ function DispatchPage() {
                         <Grid item xs={12} md={6} lg={4}>
                             <InputLabelComponent>Scan or Enter QR Code*</InputLabelComponent>
                             <InputComponent
-                                value={qrInputValue}
+                                value={qrInputValue || ""}
                                 onChange={handleQrInputChange}
                                 required
                                 placeholder="Enter QR Code"
