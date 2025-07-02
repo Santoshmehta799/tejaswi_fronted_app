@@ -118,13 +118,16 @@ function DispatchPage() {
         try {
             const result = await dispatch(getDispatchQrData(product_Id)).unwrap();
             if (result?.status === 200) {
-                setQrData((prev) => [...prev, ...result?.data]);
                 dispatch(getDispatchData());
+
+                setQrData((prev) => {
+                    const existingProductNumbers = new Set(prev.map((item) => item.product_number));
+                    const newUniqueData = result.data.filter((item) => !existingProductNumbers.has(item.product_number));
+                    return [...prev, ...newUniqueData];
+                });
             }
         } catch (error) {
-            console.error("QR API failed:", error);
-        }
-    };
+            console.error("QR API failed:", error);}};
 
     const handleQrInputChange = (e) => {
         setQrInputValue(e.target.value);
@@ -140,6 +143,7 @@ function DispatchPage() {
         try {
             const parsedData = JSON.parse(product_Id);
             setQrInputValue(parsedData.product_number);
+            dispatch(getDispatchData());
         } catch (error) {
             console.error("Invalid QR Code JSON:", error);
         }
