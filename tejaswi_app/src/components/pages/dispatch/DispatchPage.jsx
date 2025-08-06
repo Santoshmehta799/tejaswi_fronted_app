@@ -90,7 +90,7 @@ function DispatchPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const runFunction = useRef(false);
-    const [qrData, setQrData] = useState([]);
+    const [setQrData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [qrInputValue, setQrInputValue] = useState("")
     const [userData, setUserData] = useState({
@@ -226,26 +226,30 @@ function DispatchPage() {
     }, [cameraOpen]);
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        const data = {
-            select_client: userData.client,
-            vehicle_number: userData.vehicleNumber,
-            driver_contact: userData.driverContactNumber,
-            scanned_items: qrData.map((d) =>
-                `[${d.product_number}] - ${d.quality} - ${d.colour} - ${d.product_type} - ${d.net_weight}kg - ${d.gross_weight}gw - ${d.length}l - ${d.width}w - ${d.gsm}gsm`
-            ),
-        };
-        try {
-            const response = await dispatch(createDispatchData(data)).unwrap();
-            if (response.status === 200) {
-                setUserData({ client: "", vehicleNumber: "", driverContactNumber: "" });
-                navigate("/dispatched-history");
-            }
-        } finally {
-            setIsLoading(false);
-        }
+    e.preventDefault();
+    setIsLoading(true);
+
+    const dispatchItems = data.map((d) =>
+        `[${d.product_number}] - ${d.quality} - ${d.colour} - ${d.product_type} - ${d.net_weight}kg - ${d.gross_weight}gw - ${d.length}l - ${d.width}w - ${d.gsm}gsm`
+    );
+
+    const payload = {
+        select_client: userData.client,
+        vehicle_number: userData.vehicleNumber,
+        driver_contact: userData.driverContactNumber,
+        scanned_items: dispatchItems,
     };
+
+    try {
+        const response = await dispatch(createDispatchData(payload)).unwrap();
+        if (response.status === 200) {
+            setUserData({ client: "", vehicleNumber: "", driverContactNumber: "" });
+            navigate("/dispatched-history");
+        }
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     useEffect(() => {
         if (!runFunction.current) {
