@@ -120,8 +120,13 @@ function InventoryPage() {
                                         <TableCellComponent sx={{ width: "10%" }} align="center">
                                             Net Weight
                                         </TableCellComponent>
+
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">
+                                            GSM
+                                            </TableCellComponent>
+
                                         <TableCellComponent sx={{ width: "10%" }}>
-                                            laminated
+                                                                laminated
                                         </TableCellComponent>
                                         <TableCellComponent sx={{ width: "15%" }} align="center">
                                             Action
@@ -171,6 +176,13 @@ function InventoryPage() {
                                                             ? data?.net_weight
                                                             : "-"}
                                                     </TableCellContainer>
+
+                                                    <TableCellContainer align="center">
+                                                        {data?.gsm
+                                                            ? data?.gsm
+                                                            : "-"}
+                                                    </TableCellContainer>
+
                                                     <TableCellContainer align="center">
                                                         {data?.leminated === false ? "No" : "Yes"}
                                                     </TableCellContainer>
