@@ -5,43 +5,42 @@ import { refreshToken } from "../../utils/refreshToken";
 
 export const getInventory = createAsyncThunk(
     "inventory/getInventory",
-    async (_, thunkAPI) => {
+    async ({ page = 1, limit = 20 }, thunkAPI) => {
         let token = Cookies.get("access");
 
         const makeRequest = async (token) => {
             return await axios.get(
-                `${process.env.REACT_APP_API_KEY}/auth/inventory/records`,
+                `${process.env.REACT_APP_API_KEY}/auth/inventory/records?page=${page}&page_size=${limit}`,
                 {
-                    headers: {
-                        'ngrok-skip-browser-warning': 'true',
-                        Authorization: `Bearer ${token}`,
-                    },
+                headers: {
+                    "ngrok-skip-browser-warning": "true",
+                    Authorization: `Bearer ${token}`,
+                },
                 }
             );
         };
+
         try {
-            const response = await makeRequest(token);
-            if (response.status === 200) {
-                return response;
-            }
-
-        } catch (error) {
-            if (error.response) {
-                try {
-                    token = await refreshToken();
-                    const response = await makeRequest(token);
-
-                    if (response.status === 200) {
-                        return response;
-                    }
-                } catch (refresherror) {
-                    return thunkAPI.rejectWithValue(refresherror.response);
-                }
-            } else {
-                return thunkAPI.rejectWithValue(error.response);
-            }
+        const response = await makeRequest(token);
+        if (response.status === 200) {
+            return response.data;
         }
+    } catch (error) {
+      if (error.response) {
+        try {
+          token = await refreshToken();
+          const response = await makeRequest(token);
+          if (response.status === 200) {
+            return response.data;
+          }
+        } catch (refresherror) {
+          return thunkAPI.rejectWithValue(refresherror.response);
+        }
+      } else {
+        return thunkAPI.rejectWithValue(error.response);
+      }
     }
+  }
 );
 
 export const updateInventory = createAsyncThunk(
@@ -151,13 +150,15 @@ export const deleteInventory = createAsyncThunk(
 );
 
 export const inventorySlice = createSlice({
-    name: "inventory",
-    initialState: {
-        status: "idle",
-        data: null,
-        items: null,
-        error: null,
-    },
+  name: "inventory",
+  initialState: {
+    status: "idle",
+    results: [],
+    totalPages: 0,
+    currentPage: 1,
+    totalCount: 0,
+    error: null,
+  },
     reducers: {},
 
     extraReducers: (builder) => {
@@ -168,12 +169,15 @@ export const inventorySlice = createSlice({
             })
             .addCase(getInventory.fulfilled, (state, action) => {
                 state.status = "success";
-                state.data = action.payload.data
+                state.results = action.payload.results;
+                state.totalPages = action.payload.total_pages;
+                state.currentPage = action.payload.current_page;
+                state.totalCount = action.payload.total_count;
                 state.error = null;
             })
             .addCase(getInventory.rejected, (state, action) => {
                 state.status = "error";
-                state.error = action.payload.message;
+                state.error = action.payload?.message || action.error.message;
             })
             .addCase(showInventorySticker.pending, (state) => {
                 state.status = "loading";

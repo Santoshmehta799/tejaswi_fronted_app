@@ -1,4 +1,4 @@
-import { Box, IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Pagination } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -67,20 +67,27 @@ const CategoryNotFound = styled(TableCell)(({ theme }) => ({
 
 
 function InventoryPage() {
-    const runFunction = useRef(false)
-    const dispatch = useDispatch()
-    const [open, setOpen] = useState(false)
-    const [isId, setIsId] = useState("")
+    const runFunction = useRef(false);
+    const dispatch = useDispatch();
+    const [open, setOpen] = useState(false);
+    const [isId, setIsId] = useState("");
     const [isOpen, setIsOpen] = useState(false);
 
-    const { data, items } = useSelector((state) => state.inventory)
+    const { results, totalPages, items } = useSelector((state) => state.inventory);
+
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         if (!runFunction.current) {
-            dispatch(getInventory())
-            runFunction.current = true
+            dispatch(getInventory({ page, limit: 20 }));
+            runFunction.current = true;
         }
-    }, [dispatch])
+    }, [dispatch, page]);
+
+    const handlePageChange = (event, value) => {
+        setPage(value);
+        dispatch(getInventory({ page: value, limit: 20 }));
+    };
 
     return (
         <>
@@ -96,115 +103,79 @@ function InventoryPage() {
                             <Table>
                                 <TableHead>
                                     <TableRow sx={{ background: "#2B2C40" }}>
-                                        <TableCellComponent sx={{ width: "10%" }}>
-                                            Product No.
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "10%" }} align="center">
-                                            Color
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "10%" }} align="center">
-                                            Quality
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "10%" }}>
-                                            Type
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "10%" }} align="center">
-                                            Length
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "10%" }} align="center">
-                                            Width
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "10%" }} align="center">
-                                            Gross Weight
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "10%" }} align="center">
-                                            Net Weight
-                                        </TableCellComponent>
-
-                                        <TableCellComponent sx={{ width: "10%" }} align="center">
-                                            GSM
-                                            </TableCellComponent>
-
-                                        <TableCellComponent sx={{ width: "10%" }}>
-                                                                laminated
-                                        </TableCellComponent>
-                                        <TableCellComponent sx={{ width: "15%" }} align="center">
-                                            Action
-                                        </TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }}>Product No.</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">Color</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">Quality</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }}>Type</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">Length</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">Width</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">Gross Weight</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">Net Weight</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">GSM</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }}>Laminated</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "15%" }} align="center">Action</TableCellComponent>
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {data?.length === 0 ? (
+                                    {results?.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={9} align="center">
-                                                <CategoryNotFound>No Inventory Found.</CategoryNotFound>
+                                            <TableCell colSpan={11} align="center">
+                                            <CategoryNotFound>No Inventory Found.</CategoryNotFound>
                                             </TableCell>
                                         </TableRow>
-                                    ) : (
-                                        data?.map((data, index) => {
-                                            return (
-                                                <TableRow key={index} hover>
-                                                    <TableCellContainer>
-                                                        {data?.product_code
-                                                            ? data?.product_code
-                                                            : "-"}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer align="center">
-                                                        {data?.color ? data?.color : "-"}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer align="center">
-                                                        {data?.quality ? data?.quality : "-"}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer>
-                                                        {data?.type}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer align="center">
-                                                        {data?.length
-                                                            ? data?.length
-                                                            : "-"}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer align="center">
-                                                        {data?.width
-                                                            ? data?.width
-                                                            : "-"}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer align="center">
-                                                        {data?.gross_weight}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer align="center">
-                                                        {data?.net_weight
-                                                            ? data?.net_weight
-                                                            : "-"}
-                                                    </TableCellContainer>
-
-                                                    <TableCellContainer align="center">
-                                                        {data?.gsm
-                                                            ? data?.gsm
-                                                            : "-"}
-                                                    </TableCellContainer>
-
-                                                    <TableCellContainer align="center">
-                                                        {data?.leminated === false ? "No" : "Yes"}
-                                                    </TableCellContainer>
-                                                    <TableCellContainer align="center">
-                                                        <Stack direction="row" gap={1}>
-                                                            <IconButton><IoMdEye onClick={() => { setIsOpen(true); dispatch(showInventorySticker({ id: data?.product_code })) }} style={{ fontSize: "20px", color: "blue" }} /></IconButton>
-                                                            <IconButton onClick={() => { setOpen(true); setIsId(data?.product_code) }}><FaRegEdit style={{ fontSize: "18px", color: "green" }} /></IconButton>
-                                                            <IconButton><MdOutlineDeleteOutline onClick={() => dispatch(deleteInventory({ id: data?.product_code }))} style={{ fontSize: "20px", color: "red" }} /></IconButton>
-                                                        </Stack>
-                                                    </TableCellContainer>
-                                                </TableRow>
-                                            );
-                                        })
-                                    )}
+                                        ) : (
+                                        results?.map((row, index) => (
+                                            <TableRow key={index} hover>
+                                            <TableCellContainer>{row?.product_code || "-"}</TableCellContainer>
+                                            <TableCellContainer align="center">{row?.color || "-"}</TableCellContainer>
+                                            <TableCellContainer align="center">{row?.quality || "-"}</TableCellContainer>
+                                            <TableCellContainer>{row?.type}</TableCellContainer>
+                                            <TableCellContainer align="center">{row?.length || "-"}</TableCellContainer>
+                                            <TableCellContainer align="center">{row?.width || "-"}</TableCellContainer>
+                                            <TableCellContainer align="center">{row?.gross_weight}</TableCellContainer>
+                                            <TableCellContainer align="center">{row?.net_weight || "-"}</TableCellContainer>
+                                            <TableCellContainer align="center">{row?.gsm || "-"}</TableCellContainer>
+                                            <TableCellContainer align="center">{row?.leminated === false ? "No" : "Yes"}</TableCellContainer>
+                                            <TableCellContainer align="center">
+                                                <Stack direction="row" gap={1}>
+                                                <IconButton>
+                                                    <IoMdEye
+                                                    onClick={() => {
+                                                        setIsOpen(true);
+                                                        dispatch(showInventorySticker({ id: row?.product_code }));
+                                                    }}
+                                                    style={{ fontSize: "20px", color: "blue" }}
+                                                    />
+                                                </IconButton>
+                                                <IconButton onClick={() => { setOpen(true); setIsId(row?.product_code); }}>
+                                                    <FaRegEdit style={{ fontSize: "18px", color: "green" }} />
+                                                </IconButton>
+                                                <IconButton onClick={() => dispatch(deleteInventory({ id: row?.product_code }))}>
+                                                    <MdOutlineDeleteOutline style={{ fontSize: "20px", color: "red" }} />
+                                                </IconButton>
+                                                </Stack>
+                                            </TableCellContainer>
+                                            </TableRow>
+                                        ))
+                                        )}
                                 </TableBody>
                             </Table>
                         </TableContainerComponent>
+
+                        {/* Pagination UI */}
+                        <Box display="flex" justifyContent="center" mt={3}>
+                            <Pagination
+                                count={totalPages}
+                                page={page}
+                                onChange={handlePageChange}
+                                color="primary"
+                            />
+                        </Box>
                     </BoxContainer>
                 </InnerContainer>
             </Container>
         </>
-    )
+    );
 }
 
-export default InventoryPage
+export default InventoryPage;
