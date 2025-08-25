@@ -1,4 +1,5 @@
-import { Box, IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Pagination } from "@mui/material";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { Box, IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Pagination, TextField } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,6 +9,7 @@ import { MdOutlineDeleteOutline } from "react-icons/md";
 import EditInventoryPage from "./EditInventoryPage";
 import { IoMdEye } from "react-icons/io";
 import InventoryBillPage from "./InventoryBillPage";
+import { IoMdSearch } from "react-icons/io";
 
 const Container = styled(Box)(({ theme }) => ({
     width: "100%",
@@ -33,6 +35,8 @@ const TableContainerComponent = styled(TableContainer)(({ theme }) => ({
 }));
 
 const Header = styled(Box)(({ theme }) => ({
+    display: "flex",
+    justifyContent: "space-between",
     marginBottom: "30px"
 }));
 
@@ -65,6 +69,12 @@ const CategoryNotFound = styled(TableCell)(({ theme }) => ({
     },
 }));
 
+const InputComponent = styled(TextField)(({ theme }) => ({
+    "& .MuiOutlinedInput-input": {
+        padding: "6px 12px",
+    },
+}));
+
 
 function InventoryPage() {
     const runFunction = useRef(false);
@@ -72,32 +82,70 @@ function InventoryPage() {
     const [open, setOpen] = useState(false);
     const [isId, setIsId] = useState("");
     const [isOpen, setIsOpen] = useState(false);
+    const [searchInput, setSearchInput] = useState("");
 
     const { results, totalPages, items } = useSelector((state) => state.inventory);
 
     const [page, setPage] = useState(1);
 
-    useEffect(() => {
-        if (!runFunction.current) {
-            dispatch(getInventory({ page, limit: 20 }));
-            runFunction.current = true;
-        }
-    }, [dispatch, page]);
 
     const handlePageChange = (event, value) => {
         setPage(value);
         dispatch(getInventory({ page: value, limit: 20 }));
     };
+    useEffect(() => {
+        if (!runFunction.current) {
+            dispatch(getInventory({ page, limit: 20, search: searchInput }));
+            runFunction.current = true;
+        }
+    }, [dispatch, page]);
+
+
+    const handleSearchSubmit = async (e) => {
+        e.preventDefault();
+        setPage(1);
+        await dispatch(getInventory({ page: 1, limit: 20, search: searchInput })).unwrap();
+    };
+
 
     return (
         <>
             <EditInventoryPage isId={isId} open={open} setOpen={setOpen} />
-            <InventoryBillPage isOpen={isOpen} setIsOpen={setIsOpen} items={items}/>
+            <InventoryBillPage isOpen={isOpen} setIsOpen={setIsOpen} items={items} />
             <Container>
                 <InnerContainer>
                     <BoxContainer elevation={2}>
                         <Header>
                             <Title>Inventory</Title>
+                            <Box component="form" onSubmit={handleSearchSubmit}>
+                                <InputComponent
+                                    type="text"
+                                    placeholder="Search..."
+                                    value={searchInput}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setSearchInput(value);
+
+                                        if (value.length === 0) {
+                                            setPage(1);
+                                            dispatch(getInventory({ page: 1, limit: 20 }));
+                                        }
+                                    }}
+                                    slotProps={{
+                                        input: {
+                                            endAdornment: (
+                                                <IconButton
+                                                    type="submit"
+                                                    disableRipple
+                                                    sx={{ padding: "0px" }}
+                                                >
+                                                    <IoMdSearch />
+                                                </IconButton>
+                                            ),
+                                        },
+                                    }}
+                                />
+                            </Box>
                         </Header>
                         <TableContainerComponent>
                             <Table>
@@ -120,44 +168,44 @@ function InventoryPage() {
                                     {results?.length === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan={11} align="center">
-                                            <CategoryNotFound>No Inventory Found.</CategoryNotFound>
+                                                <CategoryNotFound>No Inventory Found.</CategoryNotFound>
                                             </TableCell>
                                         </TableRow>
-                                        ) : (
+                                    ) : (
                                         results?.map((row, index) => (
                                             <TableRow key={index} hover>
-                                            <TableCellContainer>{row?.product_code || "-"}</TableCellContainer>
-                                            <TableCellContainer align="center">{row?.color || "-"}</TableCellContainer>
-                                            <TableCellContainer align="center">{row?.quality || "-"}</TableCellContainer>
-                                            <TableCellContainer>{row?.type}</TableCellContainer>
-                                            <TableCellContainer align="center">{row?.length || "-"}</TableCellContainer>
-                                            <TableCellContainer align="center">{row?.width || "-"}</TableCellContainer>
-                                            <TableCellContainer align="center">{row?.gross_weight}</TableCellContainer>
-                                            <TableCellContainer align="center">{row?.net_weight || "-"}</TableCellContainer>
-                                            <TableCellContainer align="center">{row?.gsm || "-"}</TableCellContainer>
-                                            <TableCellContainer align="center">{row?.leminated === false ? "No" : "Yes"}</TableCellContainer>
-                                            <TableCellContainer align="center">
-                                                <Stack direction="row" gap={1}>
-                                                <IconButton>
-                                                    <IoMdEye
-                                                    onClick={() => {
-                                                        setIsOpen(true);
-                                                        dispatch(showInventorySticker({ id: row?.product_code }));
-                                                    }}
-                                                    style={{ fontSize: "20px", color: "blue" }}
-                                                    />
-                                                </IconButton>
-                                                <IconButton onClick={() => { setOpen(true); setIsId(row?.product_code); }}>
-                                                    <FaRegEdit style={{ fontSize: "18px", color: "green" }} />
-                                                </IconButton>
-                                                <IconButton onClick={() => dispatch(deleteInventory({ id: row?.product_code }))}>
-                                                    <MdOutlineDeleteOutline style={{ fontSize: "20px", color: "red" }} />
-                                                </IconButton>
-                                                </Stack>
-                                            </TableCellContainer>
+                                                <TableCellContainer>{row?.product_code || "-"}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.color || "-"}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.quality || "-"}</TableCellContainer>
+                                                <TableCellContainer>{row?.type}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.length || "-"}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.width || "-"}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.gross_weight}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.net_weight || "-"}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.gsm || "-"}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.leminated === false ? "No" : "Yes"}</TableCellContainer>
+                                                <TableCellContainer align="center">
+                                                    <Stack direction="row" gap={1}>
+                                                        <IconButton>
+                                                            <IoMdEye
+                                                                onClick={() => {
+                                                                    setIsOpen(true);
+                                                                    dispatch(showInventorySticker({ id: row?.product_code }));
+                                                                }}
+                                                                style={{ fontSize: "20px", color: "blue" }}
+                                                            />
+                                                        </IconButton>
+                                                        <IconButton onClick={() => { setOpen(true); setIsId(row?.product_code); }}>
+                                                            <FaRegEdit style={{ fontSize: "18px", color: "green" }} />
+                                                        </IconButton>
+                                                        <IconButton onClick={() => dispatch(deleteInventory({ id: row?.product_code }))}>
+                                                            <MdOutlineDeleteOutline style={{ fontSize: "20px", color: "red" }} />
+                                                        </IconButton>
+                                                    </Stack>
+                                                </TableCellContainer>
                                             </TableRow>
                                         ))
-                                        )}
+                                    )}
                                 </TableBody>
                             </Table>
                         </TableContainerComponent>
@@ -171,6 +219,7 @@ function InventoryPage() {
                                 color="primary"
                             />
                         </Box>
+
                     </BoxContainer>
                 </InnerContainer>
             </Container>
