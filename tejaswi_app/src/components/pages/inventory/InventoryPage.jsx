@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Box, IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Pagination, TextField } from "@mui/material";
+import { Box, IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography, Pagination, TextField, Button } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,6 +10,8 @@ import EditInventoryPage from "./EditInventoryPage";
 import { IoMdEye } from "react-icons/io";
 import InventoryBillPage from "./InventoryBillPage";
 import { IoMdSearch } from "react-icons/io";
+import axios from "axios";
+import Cookies from "js-cookie";
 
 const Container = styled(Box)(({ theme }) => ({
     width: "100%",
@@ -107,6 +109,59 @@ function InventoryPage() {
         await dispatch(getInventory({ page: 1, limit: 20, search: searchInput })).unwrap();
     };
 
+    const makeRequest = async () => {
+            try {
+                let token = Cookies.get("access");
+                const response = await axios.get(
+                    `${process.env.REACT_APP_API_KEY}/auth/inventory/export`,
+                    {
+                        headers: {
+                            "ngrok-skip-browser-warning": "true",
+                            Authorization: `Bearer ${token}`,
+                        },
+                        responseType: "blob", // 👈 Excel/CSV ke liye zaroori hai
+                    }
+                );
+
+                return response;
+            } catch (error) {
+                if (error.response) {
+                    alert(`Export failed: ${error.response.data?.message || "Server error"}`);
+                } else if (error.request) {
+                    alert("No response from server. Please try again.");
+                } else {
+                    alert(`Error: ${error.message}`);
+                }
+                return null;
+            }
+        };
+
+
+    const downloadExcel = async () => {
+            const response = await makeRequest();
+            if (!response) {
+                return;
+            }
+
+            try {
+                const blob = new Blob([response.data]);
+
+                const url = window.URL.createObjectURL(blob);
+
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", "inventory_records.xlsx");
+                document.body.appendChild(link);
+                link.click();
+
+
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            } catch (err) {
+                console.error("❌ Download error:", err);
+                alert("Error while downloading Excel");
+            }
+        };
 
     return (
         <>
@@ -145,6 +200,17 @@ function InventoryPage() {
                                         },
                                     }}
                                 />
+
+
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{ textTransform: "capitalize", marginLeft: "10px" }}
+                                    onClick={downloadExcel}
+                                >
+                                    Export Inventory
+                                </Button>
+
                             </Box>
                         </Header>
                         <TableContainerComponent>
