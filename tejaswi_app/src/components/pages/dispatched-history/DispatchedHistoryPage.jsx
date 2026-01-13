@@ -7,6 +7,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { getDispatchHistoryData } from "../../../features/dispatch/dispatchSlice";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const Container = styled(Box)(({ theme }) => ({
     width: "100%",
@@ -94,6 +96,95 @@ function DispatchedHistoryPage() {
 
     };
 
+    const downloadExcel = async (id) => {
+        try {
+            const token = Cookies.get("access");
+
+            const response = await axios.get(
+                `${process.env.REACT_APP_API_KEY}/auth/dispatch-managers/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const dispatch = response.data;
+
+            /* =====================
+            SHEET 1 – TABLE
+            ====================== */
+            const sheet1Data = dispatch.scanned_items.map(item => ({
+                "Product No": item.product_number || "",
+                "Color": item.colour || "",
+                "Quality": item.quality || "",
+                "Type": item.product_type || "",
+                "Gross Weight": item.gross_weight || "",
+                "Weight": item.weight || "",
+                "GSM": item.gsm || "",
+                "Length": item.length || "",
+                "Width": item.width || "",
+            }));
+
+            const sheet1 = XLSX.utils.json_to_sheet(sheet1Data);
+
+            /* =====================
+            SHEET 2 – SUMMARY
+            ====================== */
+            const sheet2Data = [];
+
+            sheet2Data.push(["Packing Slip"]);
+            sheet2Data.push([]);
+            sheet2Data.push([`Client: ${dispatch.select_client}`]);
+            sheet2Data.push([`Vehicle Number: ${dispatch.vehicle_number}`]);
+            sheet2Data.push([`Driver Contact: ${dispatch.driver_contact}`]);
+            sheet2Data.push([`Date: ${formatDate(dispatch.created_at)}`]);
+            sheet2Data.push([
+                `Items: ${dispatch.total_items} | Total Weight: ${dispatch.total_weight} kg`
+            ]);
+            sheet2Data.push([]);
+
+            const summary = dispatch.disptach_summary || {};
+
+            Object.keys(summary).forEach((color) => {
+
+            const qualities = summary[color];
+
+            Object.keys(qualities).forEach((quality) => {
+
+                // ✅ ab quality defined hai
+                sheet2Data.push([quality]);   // Quality first
+                sheet2Data.push([color]);     // then Color
+
+                qualities[quality].forEach((item) => {
+                    sheet2Data.push([
+                        `• ${item.type} — ${item.pieces} pcs | ${item.total_weight_kg} kg`
+                    ]);
+                });
+
+                sheet2Data.push([]);
+            });
+
+            sheet2Data.push([]);
+        });
+
+            const sheet2 = XLSX.utils.aoa_to_sheet(sheet2Data);
+
+            /* =====================
+            WORKBOOK
+            ====================== */
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, sheet2, "Sheet1");
+            XLSX.utils.book_append_sheet(wb, sheet1, "Sheet2");
+
+            const buffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+            saveAs(new Blob([buffer]), `dispatch-history-${id}.xlsx`);
+
+        } catch (err) {
+            console.error("Excel download error", err);
+            alert("Failed to download Excel");
+        }
+    };
 
     const downloadPDF = async (id) => {
         try {
@@ -260,6 +351,13 @@ function DispatchedHistoryPage() {
                                                         onClick={() => downloadPDF(dispatch?.id)}
                                                     >
                                                         Download PDF
+                                                    </Button>
+
+                                                    <Button
+                                                        variant="outlined"
+                                                        onClick={() => downloadExcel(dispatch.id)}
+                                                        >
+                                                        Download Excel
                                                     </Button>
 
                                                 </Stack>
