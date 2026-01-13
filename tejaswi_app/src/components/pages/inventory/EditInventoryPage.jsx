@@ -66,9 +66,9 @@ const EditInventoryPage = ({ isId, open, setOpen }) => {
     });
 
     const { droplist } = useSelector((state) => state.stickerGeneratorDrop)
-    const { data } = useSelector((state) => state.inventory)
+    const { results } = useSelector((state) => state.inventory)
 
-    const filterIsData = data?.find((item) => item.product_code === isId)
+    const filterIsData = results?.find((item) => item.product_code === isId)
 
 
     const handleChange = (e) => {
