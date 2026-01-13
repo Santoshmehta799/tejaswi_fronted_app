@@ -133,6 +133,7 @@ function DispatchedHistoryPage() {
             ====================== */
             const sheet2Data = [];
 
+            // Header
             sheet2Data.push(["Packing Slip"]);
             sheet2Data.push([]);
             sheet2Data.push([`Client: ${dispatch.select_client}`]);
@@ -143,30 +144,28 @@ function DispatchedHistoryPage() {
                 `Items: ${dispatch.total_items} | Total Weight: ${dispatch.total_weight} kg`
             ]);
             sheet2Data.push([]);
+            sheet2Data.push([]);
+
+            // Table header
+            sheet2Data.push(["Quality", "Colour", "Type", "Qty", "Net Wt"]);
 
             const summary = dispatch.disptach_summary || {};
 
             Object.keys(summary).forEach((color) => {
+                const qualities = summary[color];
 
-            const qualities = summary[color];
-
-            Object.keys(qualities).forEach((quality) => {
-
-                // ✅ ab quality defined hai
-                sheet2Data.push([quality]);   // Quality first
-                sheet2Data.push([color]);     // then Color
-
-                qualities[quality].forEach((item) => {
-                    sheet2Data.push([
-                        `• ${item.type} — ${item.pieces} pcs | ${item.total_weight_kg} kg`
-                    ]);
+                Object.keys(qualities).forEach((quality) => {
+                    qualities[quality].forEach((item) => {
+                        sheet2Data.push([
+                            quality,
+                            color,
+                            item.type,
+                            item.pieces,
+                            item.total_weight_kg,
+                        ]);
+                    });
                 });
-
-                sheet2Data.push([]);
             });
-
-            sheet2Data.push([]);
-        });
 
             const sheet2 = XLSX.utils.aoa_to_sheet(sheet2Data);
 
