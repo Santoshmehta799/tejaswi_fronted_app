@@ -201,6 +201,8 @@ function DispatchedHistoryPage() {
 
             const dispatch = response?.data;
             const doc = new jsPDF();
+
+            // ================= HEADER =================
             doc.setFontSize(16);
             doc.text("Packing Slip", 14, 15);
 
@@ -210,37 +212,98 @@ function DispatchedHistoryPage() {
             doc.text(`Vehicle Number: ${dispatch.vehicle_number || ''}`, 14, y += 6);
             doc.text(`Driver Contact: ${dispatch.driver_contact || ''}`, 14, y += 6);
             doc.text(`Date: ${formatDate(dispatch.created_at)}`, 14, y += 6);
-            doc.text(`Items: ${dispatch.total_items || 0} | Total Weight: ${dispatch.total_weight || 0} kg`, 14, y += 6);
+            doc.text(
+                `Items: ${dispatch.total_items || 0} | Total Weight: ${dispatch.total_weight || 0} kg`,
+                14,
+                y += 6
+            );
 
             y += 10;
 
-            const summary = dispatch.disptach_summary;
+            // ================= SUMMARY =================
+            const summary = dispatch.disptach_summary || {};
 
-            const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+            const capitalize = (str = '') =>
+                str.charAt(0).toUpperCase() + str.slice(1);
 
-            const renderSection = (color, categories) => {
-                doc.setFontSize(14);
-                doc.text(`${color}`, 14, y += 8);
-                Object.entries(categories).forEach(([category, items]) => {
-                    doc.setFontSize(12);
-                    doc.text(`${capitalize(category)}`, 16, y += 6);
+            // ✅ QUALITY → COLOR → TYPE
+            const finalSummary = {};
+
+            Object.entries(summary).forEach(([color, qualities]) => {
+                Object.entries(qualities).forEach(([quality, items]) => {
+
+                    if (!finalSummary[quality]) {
+                        finalSummary[quality] = {};
+                    }
+
+                    if (!finalSummary[quality][color]) {
+                        finalSummary[quality][color] = {};
+                    }
 
                     items.forEach(({ type, pieces, total_weight_kg }) => {
-                        doc.text(`• ${type} —  ${pieces} pcs  |  ${total_weight_kg} kg`, 18, y += 6);
+                        if (!finalSummary[quality][color][type]) {
+                            finalSummary[quality][color][type] = {
+                                pieces: 0,
+                                total_weight_kg: 0,
+                            };
+                        }
+
+                        finalSummary[quality][color][type].pieces += pieces;
+                        finalSummary[quality][color][type].total_weight_kg += total_weight_kg;
                     });
                 });
-            };
-
-            // Loop through White, Blue, Green sections
-            Object.entries(summary).forEach(([color, categories]) => {
-                renderSection(`${color}`, categories);
             });
 
+            // ================= RENDER SUMMARY =================
+            Object.entries(finalSummary).forEach(([quality, colors]) => {
+                doc.setFontSize(14);
+                doc.text(`${capitalize(quality)}`, 14, y += 8);
+
+                Object.entries(colors).forEach(([color, types]) => {
+                    doc.setFontSize(13);
+                    doc.text(`${color}`, 18, y += 6);
+
+                    Object.entries(types).forEach(([type, data]) => {
+                        doc.setFontSize(12);
+                        doc.text(
+                            `• ${type} — ${data.pieces} pcs | ${data.total_weight_kg.toFixed(2)} kg`,
+                            22,
+                            y += 6
+                        );
+                    });
+                });
+            });
+
+            // ================= TABLE (SORTED) =================
             y += 10;
+
+            const sortedItems = [...(dispatch.scanned_items || [])].sort((a, b) => {
+                // 1️⃣ Quality
+                const q = (a.quality || '').localeCompare(b.quality || '');
+                if (q !== 0) return q;
+
+                // 2️⃣ Color
+                const c = (a.colour || '').localeCompare(b.colour || '');
+                if (c !== 0) return c;
+
+                // 3️⃣ GSM
+                return (Number(a.gsm) || 0) - (Number(b.gsm) || 0);
+            });
+
             autoTable(doc, {
                 startY: y + 4,
-                head: [['Product No.', 'Color', 'Quality', 'Type', 'Gross Weight', 'Weight', 'GSM', 'Length', 'Width']],
-                body: dispatch.scanned_items?.map(item => ([
+                head: [[
+                    'Product No.',
+                    'Color',
+                    'Quality',
+                    'Type',
+                    'Gross Weight',
+                    'Weight',
+                    'GSM',
+                    'Length',
+                    'Width'
+                ]],
+                body: sortedItems.map(item => ([
                     item.product_number || '-',
                     item.colour || '-',
                     item.quality || '-',
@@ -250,12 +313,11 @@ function DispatchedHistoryPage() {
                     item.gsm || '-',
                     item.length || '-',
                     item.width || '-',
-
-
-                ])) || [],
+                ])),
             });
 
             doc.save('dispatch-history.pdf');
+
         } catch (error) {
             console.error("Error generating PDF:", error);
             alert("Failed to generate PDF");
