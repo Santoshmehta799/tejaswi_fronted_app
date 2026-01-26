@@ -19,6 +19,9 @@ import { FaRegSquareCheck } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import jsQR from "jsqr";
 
+import { Snackbar, Alert } from "@mui/material";
+
+
 // Styled Components
 const Container = styled(Box)({
     width: "100%",
@@ -90,9 +93,14 @@ function DispatchPage() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const runFunction = useRef(false);
-    const [setQrData] = useState([]);
+    const qrInputRef = useRef(null); 
+    // const [setQrData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [qrInputValue, setQrInputValue] = useState("")
+    const [qrInputValue, setQrInputValue] = useState("");
+    const [successOpen, setSuccessOpen] = useState(false);
+    const [successMsg, setSuccessMsg] = useState("");
+    const [errorOpen, setErrorOpen] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");       
     const [userData, setUserData] = useState({
         client: "",
         vehicleNumber: "",
@@ -117,33 +125,70 @@ function DispatchPage() {
     const fetchQrData = async (product_Id) => {
         try {
             const result = await dispatch(getDispatchQrData(product_Id)).unwrap();
-            if (result?.status === 200) {
+    
+            if (result?.status === 200 && result?.data?.length > 0) {
                 dispatch(getDispatchData());
-
-                setQrData((prev) => {
-                    const existingProductNumbers = new Set(prev.map((item) => item.product_number));
-                    const newUniqueData = result.data.filter((item) => !existingProductNumbers.has(item.product_number));
-                    return [...prev, ...newUniqueData];
-                });
+    
+                setSuccessMsg(`Product ${product_Id} scanned successfully ✅`);
+                setSuccessOpen(true);
+            } else {
+                setErrorMsg(`Product ID ${product_Id} not found `);
+                setErrorOpen(true);
             }
         } catch (error) {
-            console.error("QR API failed:", error);}};
+            setErrorMsg(`Invalid Product ID `);
+            setErrorOpen(true);
+            console.error("QR API failed:", error);
+        }
+    };
 
     const handleQrInputChange = (e) => {
         setQrInputValue(e.target.value);
+    };
+
+    // ✅ Barcode Scanner key handler
+    const handleQrKeyDown = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); 
+
+            let productId = qrInputValue.trim();
+
+            if (!productId) return; 
+
+            try {
+                
+                const parsed = JSON.parse(productId);
+                productId = parsed.product_number;
+            } catch (err) {
+            
+            }
+
+            if (productId) {
+                fetchQrData(productId);
+                setQrInputValue(""); 
+                setTimeout(() => {
+                    if (qrInputRef.current) {
+                        qrInputRef.current.focus();
+                    }
+                }, 100);
+            }
+        }
     };
 
     const handleOpenCamera = () => {
         setCameraOpen(true);
     };
 
-
     const processQrCode = (product_Id) => {
         if (!product_Id) return;
         try {
             const parsedData = JSON.parse(product_Id);
-            setQrInputValue(parsedData.product_number);
-            dispatch(getDispatchData());
+            const productNumber = parsedData.product_number;
+            
+            
+            if (productNumber) {
+                fetchQrData(productNumber);
+            }
         } catch (error) {
             console.error("Invalid QR Code JSON:", error);
         }
@@ -159,6 +204,12 @@ function DispatchPage() {
         setScanning(false);
         setCameraError("");
         if (videoRef.current) videoRef.current.srcObject = null;
+
+        setTimeout(() => {
+            if (qrInputRef.current) {
+                qrInputRef.current.focus();
+            }
+        }, 100);
     };
 
     const startQrScanning = () => {
@@ -188,7 +239,6 @@ function DispatchPage() {
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
             if (qrInputValue.trim()) {
-                fetchQrData(qrInputValue);
             }
         }, 500);
 
@@ -226,30 +276,30 @@ function DispatchPage() {
     }, [cameraOpen]);
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
+        e.preventDefault();
+        setIsLoading(true);
 
-    const dispatchItems = data.map((d) =>
-        `[${d.product_number}] - ${d.quality} - ${d.colour} - ${d.product_type} - ${d.net_weight}kg - ${d.gross_weight}gw - ${d.length}l - ${d.width}w - ${d.gsm}gsm`
-    );
+        const dispatchItems = data.map((d) =>
+            `[${d.product_number}] - ${d.quality} - ${d.colour} - ${d.product_type} - ${d.net_weight}kg - ${d.gross_weight}gw - ${d.length}l - ${d.width}w - ${d.gsm}gsm`
+        );
 
-    const payload = {
-        select_client: userData.client,
-        vehicle_number: userData.vehicleNumber,
-        driver_contact: userData.driverContactNumber,
-        scanned_items: dispatchItems,
-    };
+        const payload = {
+            select_client: userData.client,
+            vehicle_number: userData.vehicleNumber,
+            driver_contact: userData.driverContactNumber,
+            scanned_items: dispatchItems,
+        };
 
-    try {
-        const response = await dispatch(createDispatchData(payload)).unwrap();
-        if (response.status === 200) {
-            setUserData({ client: "", vehicleNumber: "", driverContactNumber: "" });
-            navigate("/dispatched-history");
+        try {
+            const response = await dispatch(createDispatchData(payload)).unwrap();
+            if (response.status === 200) {
+                setUserData({ client: "", vehicleNumber: "", driverContactNumber: "" });
+                navigate("/dispatched-history");
+            }
+        } finally {
+            setIsLoading(false);
         }
-    } finally {
-        setIsLoading(false);
-    }
-};
+    };
 
     useEffect(() => {
         if (!runFunction.current) {
@@ -279,15 +329,16 @@ function DispatchPage() {
                         </Grid>
 
                         <Grid item xs={12} md={6} lg={4}>
-                            <InputLabelComponent>Scan or Enter QR Code*</InputLabelComponent>
+                            <InputLabelComponent>Scan or Enter QR Code</InputLabelComponent>
                             <InputComponent
-                                value={qrInputValue || ""}
+                                inputRef={qrInputRef}
+                                value={qrInputValue}
                                 onChange={handleQrInputChange}
-                                required
-                                placeholder="Enter QR Code"
+                                onKeyDown={handleQrKeyDown} 
+                                placeholder="Scan or type product number"
                                 fullWidth
+                                autoFocus 
                             />
-
                         </Grid>
 
                         <Grid item xs={12} md={6} lg={4}>
@@ -388,7 +439,7 @@ function DispatchPage() {
                                     type="submit"
                                     variant="contained"
                                     color="primary"
-                                    disabled={isLoading}
+                                    disabled={isLoading || data?.length === 0} 
                                     sx={{ background: "#FF0000", textTransform: "capitalize" }}
                                 >
                                     <FaRegSquareCheck style={{ marginRight: 10 }} />
@@ -461,6 +512,37 @@ function DispatchPage() {
                     </Box>
                 </Box>
             </Modal>
+            <Snackbar
+                open={successOpen}
+                autoHideDuration={2000}
+                onClose={() => setSuccessOpen(false)}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+                <Alert
+                    onClose={() => setSuccessOpen(false)}
+                    severity="success"
+                    variant="filled"
+                    sx={{ fontSize: 14 }}
+                >
+                    {successMsg}
+                </Alert>
+            </Snackbar>
+
+            <Snackbar
+                open={errorOpen}
+                autoHideDuration={3000}
+                onClose={() => setErrorOpen(false)}
+                anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            >
+                <Alert
+                    onClose={() => setErrorOpen(false)}
+                    severity="error"
+                    variant="filled"
+                    sx={{ fontSize: 14 }}
+                >
+                    {errorMsg}
+                </Alert>
+            </Snackbar>
         </Container>
     );
 }
