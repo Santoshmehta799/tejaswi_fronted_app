@@ -18,7 +18,8 @@ import { MdOutlineDeleteOutline } from "react-icons/md";
 import { FaRegSquareCheck } from "react-icons/fa6";
 import { useNavigate } from "react-router-dom";
 import jsQR from "jsqr";
-
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Snackbar, Alert } from "@mui/material";
 
 
@@ -122,6 +123,31 @@ function DispatchPage() {
         setUserData({ ...userData, [name]: value });
     };
 
+    const buildRoughSummary = (items = []) => {
+        const summary = {};
+    
+        items.forEach(item => {
+            const quality = item.quality || "Unknown";
+            const color = item.colour || "Unknown";
+            const type = item.product_type || "Unknown";
+    
+            if (!summary[quality]) summary[quality] = {};
+            if (!summary[quality][color]) summary[quality][color] = {};
+    
+            if (!summary[quality][color][type]) {
+                summary[quality][color][type] = {
+                    pieces: 0,
+                    total_weight_kg: 0,
+                };
+            }
+    
+            summary[quality][color][type].pieces += 1;
+            summary[quality][color][type].total_weight_kg += Number(item.net_weight || 0);
+        });
+    
+        return summary;
+    };
+
     const fetchQrData = async (product_Id) => {
         try {
             const result = await dispatch(getDispatchQrData(product_Id)).unwrap();
@@ -174,6 +200,108 @@ function DispatchPage() {
             }
         }
     };
+    
+    // Rough Disptach
+    const handleRoughDispatch = () => {
+        if (!data || data.length === 0) {
+            setErrorMsg("No products to generate rough dispatch ❌");
+            setErrorOpen(true);
+            return;
+        }
+    
+        const doc = new jsPDF();
+    
+        // Header
+        doc.setFontSize(14);
+        doc.text("Rough Dispatch Note", 14, 15);
+    
+        doc.setFontSize(10);
+        doc.text(`Client: ${userData.client || "-"}`, 14, 25);
+        doc.text(`Vehicle No: ${userData.vehicleNumber || "-"}`, 14, 32);
+        doc.text(`Driver Contact: ${userData.driverContactNumber || "-"}`, 14, 39);
+        doc.text(`Date: ${new Date().toLocaleString()}`, 14, 46);
+    
+        const tableData = data.map((item) => ([
+            item.product_number,
+            item.colour,
+            item.quality,
+            item.product_type,
+            item.gross_weight,
+            item.net_weight,
+            item.gsm,
+            item.length,
+            item.width,
+        ]));
+
+        const roughSummary = buildRoughSummary(data);
+
+        const capitalize = (str = "") =>
+            str.charAt(0).toUpperCase() + str.slice(1);
+
+        let y = 55;
+
+        Object.entries(roughSummary).forEach(([quality, colors]) => {
+            doc.setFontSize(14);
+            doc.text(`${capitalize(quality)}`, 14, y += 8);
+
+            Object.entries(colors).forEach(([color, types]) => {
+                doc.setFontSize(13);
+                doc.text(`${color}`, 18, y += 6);
+
+                Object.entries(types).forEach(([type, info]) => {
+                    doc.setFontSize(12);
+                    doc.text(
+                        `• ${type} — ${info.pieces} pcs | ${info.total_weight_kg.toFixed(2)} kg`,
+                        22,
+                        y += 6
+                    );
+                });
+            });
+        });
+        
+        
+        autoTable(doc, {
+            startY: y + 10,
+            head: [[
+                "Product No.",
+                "Color",
+                "Quality",
+                "Type",
+                "Gross Weight",
+                "Weight",
+                "GSM",
+                "Length",
+                "Width"
+            ]],
+            body: tableData,
+            styles: {
+                fontSize: 8,
+                halign: "center",
+            },
+            headStyles: {
+                fillColor: [41, 128, 185], 
+                textColor: 255,
+                fontStyle: "bold",
+            },
+        });
+    
+        const totalWeight = data.reduce(
+            (acc, curr) => acc + parseFloat(curr.net_weight || 0),
+            0
+        );
+    
+        doc.text(
+            `Total Items: ${data.length}    Total Weight: ${totalWeight.toFixed(2)} kg`,
+            14,
+            doc.lastAutoTable.finalY + 10
+        );
+    
+        doc.save(`rough-dispatch-${Date.now()}.pdf`);
+    
+        setSuccessMsg("Rough dispatch PDF generated successfully 📄");
+        setSuccessOpen(true);
+    };
+    
 
     const handleOpenCamera = () => {
         setCameraOpen(true);
@@ -435,6 +563,15 @@ function DispatchPage() {
 
                         <Grid item xs={12}>
                             <Stack direction="row" gap={3}>
+                                <Button
+                                    onClick={handleRoughDispatch}
+                                    variant="outlined"
+                                    color="primary"
+                                    disabled={data?.length === 0}
+                                    sx={{ background: "#ffe100", textTransform: "capitalize" }}
+                                >
+                                    Rough Dispatch (PDF)
+                                </Button>
                                 <Button
                                     type="submit"
                                     variant="contained"
