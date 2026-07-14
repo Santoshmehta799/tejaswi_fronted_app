@@ -80,6 +80,7 @@ function StickerGeneratorPage() {
         gsm: "",
         colour: "",
         productType: "",
+        party: "",       
         netWeight: "",
         grossWeight: "",
         length: "",
@@ -104,6 +105,7 @@ function StickerGeneratorPage() {
             colour_id: userData?.colour,
             product_type_id: userData?.productType,
             storage_location_id: userData?.storageLocation,
+            party_id: userData?.party,
             shift: userData?.shift,
             trading_name: userData?.tradingName,
             production_date: userData?.productionDate,
@@ -153,7 +155,8 @@ function StickerGeneratorPage() {
                 colour: droplist?.colours[0]?.id,
                 quality: droplist?.qualities[0]?.id,
                 storageLocation: droplist?.storage_locations[0]?.id,
-                productType: droplist?.product_types[0]?.id
+                productType: droplist?.product_types[0]?.id,
+                party: droplist?.parties?.[0]?.id,
             }));
         }
     }, [droplist, userData]);
@@ -288,6 +291,30 @@ function StickerGeneratorPage() {
                                     })}
                                 </SelectContainer>
                             </Grid>
+                            
+                            <Grid item size={{ xs: 12, md: 6, lg: 4 }}>
+                                <InputLabelComponent>Party*</InputLabelComponent>
+                                <SelectContainer
+                                    required
+                                    fullWidth
+                                    name="party"
+                                    value={userData.party}
+                                    onChange={handleChange}
+                                    displayEmpty
+                                >
+                                    {droplist?.parties?.length === 0 && (
+                                        <MenuItem value="" disabled>
+                                            Loading Party...
+                                        </MenuItem>
+                                    )}
+                                    {droplist?.parties?.map((data) => {
+                                        return (
+                                            <MenuItem key={data?.id} value={data?.id}>{data?.name}</MenuItem>
+                                        )
+                                    })}
+                                </SelectContainer>
+                            </Grid>
+
                             <Grid item size={{ xs: 12, md: 6, lg: 4 }}>
                                 <InputLabelComponent>Product Type*</InputLabelComponent>
                                 <SelectContainer

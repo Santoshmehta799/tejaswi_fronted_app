@@ -221,6 +221,7 @@ function InventoryPage() {
                                         <TableCellComponent sx={{ width: "10%" }} align="center">Color</TableCellComponent>
                                         <TableCellComponent sx={{ width: "10%" }} align="center">Quality</TableCellComponent>
                                         <TableCellComponent sx={{ width: "10%" }}>Type</TableCellComponent>
+                                        <TableCellComponent sx={{ width: "10%" }} align="center">Party</TableCellComponent>
                                         <TableCellComponent sx={{ width: "10%" }} align="center">Length</TableCellComponent>
                                         <TableCellComponent sx={{ width: "10%" }} align="center">Width</TableCellComponent>
                                         <TableCellComponent sx={{ width: "10%" }} align="center">Gross Weight</TableCellComponent>
@@ -233,7 +234,7 @@ function InventoryPage() {
                                 <TableBody>
                                     {results?.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={11} align="center">
+                                            <TableCell colSpan={12} align="center">
                                                 <CategoryNotFound>No Inventory Found.</CategoryNotFound>
                                             </TableCell>
                                         </TableRow>
@@ -244,6 +245,7 @@ function InventoryPage() {
                                                 <TableCellContainer align="center">{row?.color || "-"}</TableCellContainer>
                                                 <TableCellContainer align="center">{row?.quality || "-"}</TableCellContainer>
                                                 <TableCellContainer>{row?.type}</TableCellContainer>
+                                                <TableCellContainer align="center">{row?.party || "-"}</TableCellContainer>  
                                                 <TableCellContainer align="center">{row?.length || "-"}</TableCellContainer>
                                                 <TableCellContainer align="center">{row?.width || "-"}</TableCellContainer>
                                                 <TableCellContainer align="center">{row?.gross_weight}</TableCellContainer>

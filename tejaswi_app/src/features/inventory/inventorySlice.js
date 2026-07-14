@@ -198,14 +198,15 @@ export const inventorySlice = createSlice({
                 state.status = "error";
                 state.error = action.payload.message;
             })
+
             .addCase(deleteInventory.fulfilled, (state, action) => {
                 state.status = "success";
-                state.data =
-                    state.data.filter(
-                        (item) => item.product_code !== action.payload.id
-                    );
+                state.results = state.results.filter(
+                    (item) => item.product_code !== action.payload.id
+                );
                 state.error = null;
             })
+
             .addCase(deleteInventory.rejected, (state, action) => {
                 state.status = "error";
                 state.error = action.payload?.message || action.error.message;

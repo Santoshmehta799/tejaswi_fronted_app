@@ -58,6 +58,7 @@ const EditInventoryPage = ({ isId, open, setOpen }) => {
         colour: "",
         productType: "",
         netWeight: "",
+        party: "",  
         grossWeight: "",
         length: "",
         width: "",
@@ -87,6 +88,7 @@ const EditInventoryPage = ({ isId, open, setOpen }) => {
             product_type_id: Number(userData?.productType),
             colour_id: Number(userData?.colour),
             quality_id: Number(userData?.quality),
+            party_id: Number(userData?.party),
             net_weight: Number(userData?.netWeight),
             gross_weight: Number(userData?.grossWeight),
             length: Number(userData?.length),
@@ -127,6 +129,7 @@ const EditInventoryPage = ({ isId, open, setOpen }) => {
                 quality: filterIsData?.quality_id || "",
                 colour: filterIsData?.colour_id || "",
                 productType: filterIsData?.product_type_id || "",
+                party: filterIsData?.party_id || "",
                 netWeight: filterIsData?.net_weight || "",
                 grossWeight: filterIsData?.gross_weight || "",
                 length: filterIsData?.length || "",
@@ -220,6 +223,29 @@ const EditInventoryPage = ({ isId, open, setOpen }) => {
                                 </MenuItem>
                             )}
                             {droplist?.colours?.map((data) => {
+                                return (
+                                    <MenuItem key={data?.id} value={data?.id}>{data?.name}</MenuItem>
+                                )
+                            })}
+                        </SelectContainer>
+                    </Grid>
+
+                    <Grid item size={{ xs: 12, md: 6, lg: 4 }}>
+                        <InputLabelComponent>Party*</InputLabelComponent>
+                        <SelectContainer
+                            required
+                            fullWidth
+                            name="party"
+                            value={userData.party}
+                            onChange={handleChange}
+                            displayEmpty
+                        >
+                            {droplist?.parties?.length === 0 && (
+                                <MenuItem value="" disabled>
+                                    Loading Party...
+                                </MenuItem>
+                            )}
+                            {droplist?.parties?.map((data) => {
                                 return (
                                     <MenuItem key={data?.id} value={data?.id}>{data?.name}</MenuItem>
                                 )

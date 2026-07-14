@@ -48,10 +48,14 @@ const InnerContainer = styled(Box)(({ theme }) => ({
 }));
 
 const TableCellComponent = styled(TableCell)(({ theme }) => ({
-    fontSize: "18px",
-    fontWeight: 600,
-    padding: "12px 25px",
+    fontSize: "22px",
+    fontWeight: 700,
+    padding: "14px 25px",
     whiteSpace: "nowrap",
+    "@media print": {
+        fontSize: "26px",
+        fontWeight: 800,
+    },
 }));
 
 
@@ -90,15 +94,16 @@ const ProductBillModal = ({ open, setOpen, item, qr }) => {
 
                     <Stack direction="row" justifyContent="space-between" margin="15px 0">
                         <Box>
-                            <h3 style={{ fontSize: "18px", margin: "0px" }}>{item?.trading_name === "green" ? "GREEN" : "BHARAT"}</h3>
-                            <p style={{ fontSize: "14px", fontWeight: 600, margin: "0px" }}>MADE IN INDIA</p>
+                            <h3 style={{ fontSize: "30px", fontWeight: 800, margin: "0px" }}>
+                                {item?.trading_name === "green" ? "GREEN" : "BHARAT"}
+                            </h3>
+                            <p style={{ fontSize: "18px", fontWeight: 700, margin: "4px 0px" }}>MADE IN INDIA</p>
                             {item?.trading_name?.toLowerCase() !== "green" && (
                                 <>
-                                    <p style={{ fontSize: "14px", fontWeight: 600, margin: "0px" }}>Manufactured by</p>
-                                    <h3 style={{ fontSize: "16px", margin: "0px" }}>Tejaswi Nonwovens Pvt. Ltd</h3>
+                                    <p style={{ fontSize: "18px", fontWeight: 700, margin: "0px" }}>Manufactured by</p>
+                                    <h3 style={{ fontSize: "22px", fontWeight: 700, margin: "4px 0px 0px 0px" }}>Tejaswi Nonwovens Pvt. Ltd</h3>
                                 </>
                             )}
-
                         </Box>
                         <Box
                             component="img"

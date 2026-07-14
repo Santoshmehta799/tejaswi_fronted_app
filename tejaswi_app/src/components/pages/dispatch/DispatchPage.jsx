@@ -225,6 +225,7 @@ function DispatchPage() {
             item.product_number,
             item.colour,
             item.quality,
+            item.party, 
             item.product_type,
             item.gross_weight,
             item.net_weight,
@@ -266,6 +267,7 @@ function DispatchPage() {
                 "Product No.",
                 "Color",
                 "Quality",
+                "Party",
                 "Type",
                 "Gross Weight",
                 "Weight",
@@ -407,8 +409,10 @@ function DispatchPage() {
         e.preventDefault();
         setIsLoading(true);
 
+        console.log("Data party values:", data.map(d => d.party));
+
         const dispatchItems = data.map((d) =>
-            `[${d.product_number}] - ${d.quality} - ${d.colour} - ${d.product_type} - ${d.net_weight}kg - ${d.gross_weight}gw - ${d.length}l - ${d.width}w - ${d.gsm}gsm`
+            `[${d.product_number}] - ${d.quality} - ${d.colour} - ${d.product_type} - ${d.net_weight}kg - ${d.gross_weight}gw - ${d.length}l - ${d.width}w - ${d.gsm}gsm - ${d.party || 'null'}party`
         );
 
         const payload = {

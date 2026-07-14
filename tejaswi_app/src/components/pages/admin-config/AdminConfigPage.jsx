@@ -206,6 +206,7 @@ function AdminConfigPage() {
                                 <MenuItem value="quality">Quality</MenuItem>
                                 <MenuItem value="product_type">Product Type</MenuItem>
                                 <MenuItem value="storage_location">Storage Location</MenuItem>
+                                <MenuItem value="party">Party</MenuItem>
                             </SelectContainer>
                         </Grid>
 
@@ -408,6 +409,32 @@ function AdminConfigPage() {
                             )}
 
                             {data?.storage_location?.map((item, index) => (
+                                <TableRow key={index} hover>
+                                    <TableCellContainer>{item?.name}</TableCellContainer>
+
+                                    <TableCellContainer>
+                                        <Stack
+                                            direction="row"
+                                            spacing={1}
+                                            justifyContent="center"
+                                        >
+                                            <Tooltip title="Delete">
+                                                <IconButton color="error" onClick={() => handleDelete(item)}>
+                                                    <MdOutlineDeleteOutline style={{ fontSize: "20px" }} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    </TableCellContainer>
+                                </TableRow>
+                            ))}
+
+                            {data?.party?.length > 0 && (
+                    <TableRow>
+                        <TableCellContainer colSpan={2} sx={{ fontSize: "16px", fontWeight: 600 }}>Party Options</TableCellContainer>
+                    </TableRow>
+                )}
+
+                            {data?.party?.map((item, index) => (
                                 <TableRow key={index} hover>
                                     <TableCellContainer>{item?.name}</TableCellContainer>
 

@@ -296,6 +296,7 @@ function DispatchedHistoryPage() {
                     'Product No.',
                     'Color',
                     'Quality',
+                    'Party', 
                     'Type',
                     'Gross Weight',
                     'Weight',
@@ -307,6 +308,7 @@ function DispatchedHistoryPage() {
                     item.product_number || '-',
                     item.colour || '-',
                     item.quality || '-',
+                    item.party || '-',
                     item.product_type || '-',
                     item.gross_weight || '-',
                     item.weight || '-',
@@ -431,7 +433,7 @@ function DispatchedHistoryPage() {
                                         }}>
                                             {dispatch?.scanned_items?.map((item, itemIndex) => (
                                                 <TableRow key={itemIndex}>
-                                                    <TableCellContainer>{item?.product_number} - {item?.product_type} - {item?.weight} - {item?.colour} - {item?.quality}</TableCellContainer>
+                                                    <TableCellContainer>{item?.product_number} - {item?.product_type} - {item?.weight} - {item?.colour} - {item?.quality} - {item?.party}</TableCellContainer>
                                                 </TableRow>
                                             ))}
                                         </TableBody>

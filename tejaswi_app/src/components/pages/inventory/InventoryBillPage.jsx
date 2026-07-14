@@ -47,14 +47,28 @@ const Header = styled(Box)(({ theme }) => ({
     padding: "15px 25px",
 }));
 
+const getValueFontSize = (text) => {
+    const str = String(text || "");
+    if (str.length > 12) return "18px";
+    if (str.length > 8) return "22px";
+    return "26px";
+};
 
-const TableCellComponent = styled(TableCell)(({ theme }) => ({
+const TableCellLabel = styled(TableCell)(({ theme }) => ({
     fontSize: "18px",
     fontWeight: 600,
-    padding: "12px 25px",
-    whiteSpace: "nowrap",
+    padding: "14px 12px",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
 }));
 
+const TableCellValue = styled(TableCell)(({ theme }) => ({
+    fontSize: "26px",
+    fontWeight: 800,
+    padding: "14px 8px",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+}));
 
 function InventoryBillPage({ isOpen, setIsOpen, items }) {
     const printRef = useRef();
@@ -92,12 +106,14 @@ function InventoryBillPage({ isOpen, setIsOpen, items }) {
 
                     <Stack direction="row" justifyContent="space-between" margin="15px 0">
                         <Box>
-                            <h3 style={{ fontSize: "18px", margin: "0px" }}>{items?.trading_name === "green" ? "GREEN" : "BHARAT"}</h3>
-                            <p style={{ fontSize: "14px", fontWeight: 600, margin: "0px" }}>MADE IN INDIA</p>
+                            <h3 style={{ fontSize: "26px", fontWeight: 800, margin: "0px" }}>
+                                {items?.trading_name === "green" ? "GREEN" : "BHARAT"}
+                            </h3>
+                            <p style={{ fontSize: "18px", fontWeight: 700, margin: "4px 0px" }}>MADE IN INDIA</p>
                             {items?.trading_name?.toLowerCase() !== "green" && (
                                 <>
-                                    <p style={{ fontSize: "14px", fontWeight: 600, margin: "0px" }}>Manufactured by</p>
-                                    <h3 style={{ fontSize: "16px", margin: "0px" }}>Tejaswi Nonwovens Pvt. Ltd</h3>
+                                    <p style={{ fontSize: "18px", fontWeight: 700, margin: "0px" }}>Manufactured by</p>
+                                    <h3 style={{ fontSize: "20px", fontWeight: 700, margin: "4px 0px 0px 0px" }}>Tejaswi Nonwovens Pvt. Ltd</h3>
                                 </>
                             )}
                         </Box>
@@ -118,66 +134,66 @@ function InventoryBillPage({ isOpen, setIsOpen, items }) {
 
                     </Stack>
 
-                    <Table sx={{ border: "1px solid #ccc" }}>
-                        <TableHead>
-                            <TableRow>
-                                <TableCellComponent>
-                                    Product No
-                                </TableCellComponent>
-                                <TableCellComponent sx={{ borderRight: "1px solid #ccc" }}>
-                                    : {items?.product_number}
-                                </TableCellComponent>
-                                <TableCellComponent>
-                                    Colour
-                                </TableCellComponent>
-                                <TableCellComponent >
-                                    : {items?.colour?.name}
-                                </TableCellComponent>
-                            </TableRow>
-                            <TableRow>
-                                <TableCellComponent>
-                                    Length
-                                </TableCellComponent>
-                                <TableCellComponent sx={{ borderRight: "1px solid #ccc" }}>
-                                    : {items?.length}
-                                </TableCellComponent>
-                                <TableCellComponent>
-                                    Width
-                                </TableCellComponent>
-                                <TableCellComponent>
-                                    : {items?.width}
-                                </TableCellComponent>
-                            </TableRow>
-                            <TableRow>
-                                <TableCellComponent>
-                                    Quality
-                                </TableCellComponent>
-                                <TableCellComponent sx={{ borderRight: "1px solid #ccc" }}>
-                                    : {items?.quality?.name}
-                                </TableCellComponent>
-                                <TableCellComponent>
-                                    GSM
-                                </TableCellComponent>
-                                <TableCellComponent>
-                                    : {items?.gsm}
-                                </TableCellComponent>
-                            </TableRow>
-                            <TableRow>
-                                <TableCellComponent>
-                                    Gross Weight
-                                </TableCellComponent>
-                                <TableCellComponent sx={{ borderRight: "1px solid #ccc" }}>
-                                    : {items?.gross_weight}
-                                </TableCellComponent>
-                                <TableCellComponent>
-                                    Net Weight
-                                </TableCellComponent>
-                                <TableCellComponent>
-                                    : {items?.net_weight}
-                                </TableCellComponent>
-                            </TableRow>
-                        </TableHead>
-                    </Table>
+                        <Table sx={{ border: "1px solid #ccc", tableLayout: "fixed", width: "100%" }}>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCellLabel>
+                                        Product No :
+                                    </TableCellLabel>
+                                    <TableCellValue sx={{ borderRight: "1px solid #ccc" }}>
+                                        {items?.product_number}
+                                    </TableCellValue>
+                                    <TableCellLabel>
+                                        Colour :
+                                    </TableCellLabel>
+                                    <TableCellValue>
+                                        {items?.colour?.name}
+                                    </TableCellValue>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCellLabel>
+                                        Length :
+                                    </TableCellLabel>
+                                    <TableCellValue sx={{ borderRight: "1px solid #ccc" }}>
+                                        {items?.length}
+                                    </TableCellValue>
+                                    <TableCellLabel>
+                                        Width :
+                                    </TableCellLabel>
+                                    <TableCellValue>
+                                        {items?.width}
+                                    </TableCellValue>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCellLabel>
+                                        Quality :
+                                    </TableCellLabel>
+                                    <TableCellValue sx={{ borderRight: "1px solid #ccc", fontSize: getValueFontSize(items?.quality?.name) }}>
+                                        {items?.quality?.name}
+                                    </TableCellValue>
+                                    <TableCellLabel>
+                                        GSM :
+                                    </TableCellLabel>
+                                    <TableCellValue>
+                                        {items?.gsm}
+                                    </TableCellValue>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCellLabel>
+                                        Gross Weight :
+                                    </TableCellLabel>
+                                    <TableCellValue sx={{ borderRight: "1px solid #ccc" }}>
+                                        {items?.gross_weight}
+                                    </TableCellValue>
+                                    <TableCellLabel>
+                                        Net Weight :
+                                    </TableCellLabel>
+                                    <TableCellValue>
+                                        {items?.net_weight}
+                                    </TableCellValue>
+                                </TableRow>
+                            </TableHead>
+                        </Table>
 
                 </InnerContainer>
                 <Box sx={{ textAlign: "center", margin: "5px 0px 20px 0px" }}>
